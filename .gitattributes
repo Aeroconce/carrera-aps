@@ -1,0 +1,14 @@
+# Finales de línea LF en el repositorio y en el working tree, también en Windows (core.autocrlf=true).
+# Evita que scripts de shell, Dockerfiles y Caddyfile lleguen con CRLF al contenedor Linux.
+* text=auto eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary
+*.xlsx binary
+*.woff2 binary

@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Carrera APS — Sistema de Gestión de Carrera Funcionaria (Ley 19.378)
 
-## Getting Started
+Plataforma web para Departamentos de Salud municipales: cálculo automático de bienios, capacitación con
+excedentes, niveles y proyección de ascenso, alertas, nueve reportes con situación a fecha, auditoría con
+valor anterior y nuevo, respaldos acreditados y portal del funcionario. Primer destino: la demo para la
+licitación 3019-20-LE26 del Departamento de Salud de Lota; después, producto para cualquier comuna.
 
-First, run the development server:
+## Documentación
+
+Toda la especificación vive en [`docs/`](docs/00-README.md). Empieza por
+[`docs/00-README.md`](docs/00-README.md) (índice y principios) y, antes de escribir código, lee
+[`docs/15-convenciones-de-codigo.md`](docs/15-convenciones-de-codigo.md).
+
+| Bloque | Documentos |
+|---|---|
+| Qué se construye | 01 alcance · 05 módulos y pantallas · 06 reportes · 11 objetivo de la demo · 13 flujos |
+| Cómo se calcula | 03 modelo de datos · 04 motor de carrera · 14 parámetros de demostración y ejemplos |
+| Con qué | 02 arquitectura · 10 stack y librerías · 12 diseño UI y textos · 15 convenciones |
+| Cómo se asegura | 07 seguridad, auditoría y respaldos · 16 plan de pruebas · 17 runbook y entrega |
+| En qué orden | 08 importación y datos demo · 09 plan de construcción |
+
+## Stack
+
+Node.js 24 · Next.js 16 (App Router) · TypeScript · PostgreSQL 16 · Prisma 7 · Better Auth ·
+Tailwind CSS 4 · Vitest · Playwright · pnpm. Decisiones y alternativas descartadas en
+[`docs/10-stack-y-librerias.md`](docs/10-stack-y-librerias.md).
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install               # pnpm 11; los scripts de instalación permitidos están en pnpm-workspace.yaml
+cp .env.example .env       # completar valores (ver docs/17-runbook-y-entrega.md)
+pnpm exec prisma generate  # cliente Prisma en src/generated/prisma (ignorado por git)
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Verificación: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estructura objetivo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Definida en `docs/02-arquitectura.md` y `docs/15-convenciones-de-codigo.md`; se va creando por fases
+según `docs/09-plan-de-construccion.md`.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+docs/             especificación (00 a 17)
+prisma/           schema.prisma · migrations/ · seed/
+src/app           rutas (App Router): (auth) · (admin) · (portal) · api
+src/components    ui/ (shadcn) · dominio/
+src/lib           motor/ · reglas/ · db/ · acciones/ · auditoria/ · reportes/ · exportacion/ · auth/
+src/worker        alertas nocturnas y respaldos
+tests/            motor/ · acciones/ · e2e/ · fixtures/
+```
