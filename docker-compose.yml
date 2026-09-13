@@ -1,0 +1,30 @@
+# Carrera APS — infraestructura (docs/10-stack-y-librerias.md y docs/17-runbook-y-entrega.md).
+# Fase actual: solo `db`. Los servicios web, worker, caddy y backup se agregan al preparar el despliegue (doc 09, Fase 1).
+#
+# Desarrollo:  docker compose up -d db   ·  estado: docker compose ps   ·  logs: docker compose logs -f db
+# Base limpia (borra los datos):  docker compose down -v
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: carrera
+      POSTGRES_USER: app
+      # Falla de inmediato con mensaje claro si DB_PASSWORD no está definida en .env
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Define DB_PASSWORD en .env}
+    ports:
+      # Publicado solo en la propia máquina. 5436 evita chocar con el Postgres local (5432)
+      # y con los contenedores de otros proyectos (5433 a 5435, 55432).
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d carrera"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  pgdata:
