@@ -1,7 +1,12 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Esquema de datos de Carrera APS. Fuente: docs/03-modelo-de-datos.md (con ajustes de docs 04, 07, 13 y 14).
+//
+// Convenciones:
+// - Dominio en español (modelos y campos), sin tildes en identificadores (doc 15).
+// - Ids uuid v7 en el dominio (ordenados por tiempo, no enumerables). Better Auth genera los ids de sus tablas.
+// - Fechas civiles (ingreso, bienio cumplido, vigencias) como @db.Date: sin hora ni zona horaria.
+//   Instantes (creación, auditoría, accesos) como timestamptz.
+// - Puntajes en Decimal(8,2); nunca float.
+// - Los comentarios `///` alimentan el diccionario de datos de la exportación integral (doc 06).
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +15,710 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Estructura institucional
+// ---------------------------------------------------------------------------
+
+/// Departamento de Salud municipal. Multi-comuna desde el inicio: todo cuelga de una institución.
+model Institucion {
+  id        String   @id @default(uuid(7))
+  /// Nombre completo, p. ej. "Departamento de Salud, I. Municipalidad de Lota"
+  nombre    String
+  /// RUT de la institución, sin puntos ni guion
+  rut       String   @unique
+  comuna    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  establecimientos Establecimiento[]
+  funcionarios     Funcionario[]
+  reglas           ReglaCarrera[]
+  procesos         ProcesoCalificacion[]
+  documentos       Documento[]
+  usuarios         User[]
+}
+
+/// Centro de salud o unidad administrativa de la institución (CESFAM, posta, dirección).
+model Establecimiento {
+  id            String              @id @default(uuid(7))
+  institucionId String
+  nombre        String
+  tipo          TipoEstablecimiento
+  activo        Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  institucion  Institucion   @relation(fields: [institucionId], references: [id])
+  funcionarios Funcionario[]
+
+  @@index([institucionId])
+}
+
+enum TipoEstablecimiento {
+  CESFAM
+  CECOSF
+  POSTA
+  SAR
+  SAPU
+  DIRECCION
+  OTRO
+}
+
+// ---------------------------------------------------------------------------
+// Funcionario y su historia
+// ---------------------------------------------------------------------------
+
+/// Persona de la dotación APS (Ley 19.378). Nunca se borra físicamente: se da de baja con estado y fecha de egreso.
+model Funcionario {
+  id                String            @id @default(uuid(7))
+  institucionId     String
+  /// RUT sin puntos ni guion; único dentro de la institución
+  rut               String
+  nombres           String
+  apellidos         String
+  fechaNacimiento   DateTime?         @db.Date
+  email             String?
+  /// Categoría A a F según profesión o función (art. 5, Ley 19.378)
+  categoria         Categoria
+  tipoContrato      TipoContrato
+  /// Fecha de ingreso a la institución
+  fechaIngreso      DateTime          @db.Date
+  establecimientoId String
+  cargo             String?
+  /// Horas semanales de jornada (44, 33, 22...)
+  jornadaHoras      Int?
+  estado            EstadoFuncionario @default(ACTIVO)
+  fechaEgreso       DateTime?         @db.Date
+  motivoEgreso      String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  institucion     Institucion               @relation(fields: [institucionId], references: [id])
+  establecimiento Establecimiento           @relation(fields: [establecimientoId], references: [id])
+  experiencias    Experiencia[]
+  bienios         Bienio[]
+  capacitaciones  Capacitacion[]
+  excedentes      ExcedenteCapacitacion[]
+  estudios        Estudio[]
+  niveles         NivelHistorico[]
+  calificaciones  CalificacionFuncionario[]
+  documentos      Documento[]
+  alertas         Alerta[]
+  /// Cuenta del portal del funcionario (rol FUNCIONARIO), si existe
+  usuario         User?
+
+  @@unique([institucionId, rut])
+  @@index([institucionId, estado])
+  @@index([establecimientoId])
+}
+
+enum Categoria {
+  A
+  B
+  C
+  D
+  E
+  F
+}
+
+enum TipoContrato {
+  TITULAR
+  PLAZO_FIJO
+  REEMPLAZO
+}
+
+enum EstadoFuncionario {
+  ACTIVO
+  INACTIVO
+}
+
+/// Período de experiencia que cuenta para bienios: propio de la institución o reconocido de otro servicio de salud (BT 4.2).
+model Experiencia {
+  id            String    @id @default(uuid(7))
+  funcionarioId String
+  /// Institución donde se prestó el servicio, p. ej. "DAS Lota" o "Servicio de Salud Concepción"
+  institucion   String
+  /// true = en esta institución; false = experiencia reconocida de otro servicio o centro de salud
+  esPropia      Boolean
+  fechaDesde    DateTime  @db.Date
+  /// null = período vigente
+  fechaHasta    DateTime? @db.Date
+  jornadaHoras  Int?
+  documentoId   String?
+  /// Fecha del acto administrativo que reconoce la experiencia externa
+  reconocidaEl  DateTime? @db.Date
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+  documento   Documento?  @relation(fields: [documentoId], references: [id])
+
+  @@index([funcionarioId, fechaDesde])
+}
+
+/// Bienio: cada dos años de experiencia reconocida. Lo genera el motor; a mano solo se registra el reconocimiento (decreto).
+model Bienio {
+  id              String    @id @default(uuid(7))
+  funcionarioId   String
+  /// Número correlativo: 1, 2, 3...
+  numero          Int
+  /// Fecha en que se completaron los dos años
+  fechaCumplido   DateTime  @db.Date
+  /// Fecha en que el municipio lo reconoce por decreto
+  fechaReconocido DateTime? @db.Date
+  decretoNumero   String?
+  decretoFecha    DateTime? @db.Date
+  documentoId     String?
+  /// Puntos otorgados según la regla PUNTOS_BIENIO vigente a fechaCumplido
+  puntaje         Decimal   @db.Decimal(8, 2)
+  reglaId         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  funcionario Funcionario  @relation(fields: [funcionarioId], references: [id])
+  documento   Documento?   @relation(fields: [documentoId], references: [id])
+  regla       ReglaCarrera @relation(fields: [reglaId], references: [id])
+
+  @@unique([funcionarioId, numero])
+  @@index([fechaReconocido])
+}
+
+/// Actividad de capacitación con horas y puntaje según la tabla vigente a su fecha de término (BT 4.3).
+model Capacitacion {
+  id               String           @id @default(uuid(7))
+  funcionarioId    String
+  nombre           String
+  institucionDicta String
+  tipo             TipoCapacitacion
+  horas            Int
+  fechaInicio      DateTime         @db.Date
+  fechaTermino     DateTime         @db.Date
+  notaOEvaluacion  Decimal?         @db.Decimal(4, 2)
+  aprobado         Boolean
+  /// Realizada en otra comuna (BT 4.3); se computa igual, se marca para reportes
+  esOtraComuna     Boolean          @default(false)
+  documentoId      String?
+  /// Año o período al que se imputa el puntaje
+  periodo          Int
+  /// Puntaje según tabla vigente
+  puntajeCalculado Decimal          @db.Decimal(8, 2)
+  /// Lo que entró en el período; la diferencia con puntajeCalculado es excedente
+  puntajeAplicado  Decimal          @db.Decimal(8, 2)
+  reglaId          String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  funcionario Funcionario  @relation(fields: [funcionarioId], references: [id])
+  documento   Documento?   @relation(fields: [documentoId], references: [id])
+  regla       ReglaCarrera @relation(fields: [reglaId], references: [id])
+
+  @@index([funcionarioId, periodo])
+}
+
+enum TipoCapacitacion {
+  CURSO
+  DIPLOMADO
+  SEMINARIO
+  PASANTIA
+  OTRO
+}
+
+/// Puntaje de capacitación sobre el tope de un período, arrastrado al siguiente (BT 4.3, subcriterio 5).
+model ExcedenteCapacitacion {
+  id             String    @id @default(uuid(7))
+  funcionarioId  String
+  periodoOrigen  Int
+  periodoDestino Int
+  puntaje        Decimal   @db.Decimal(8, 2)
+  /// Fecha en que el excedente caducó sin poder aplicarse (regla ARRASTRE_EXCEDENTE)
+  caducadoEl     DateTime? @db.Date
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+
+  @@unique([funcionarioId, periodoOrigen, periodoDestino])
+}
+
+/// Título, diplomado, postítulo o postgrado reconocido (BT 4.4): puede dar puntaje, beneficio o ambos según reglamento.
+model Estudio {
+  id             String      @id @default(uuid(7))
+  funcionarioId  String
+  tipo           TipoEstudio
+  nombre         String
+  institucion    String
+  fechaObtencion DateTime    @db.Date
+  documentoId    String?
+  /// Puntos si la regla PUNTAJE_ESTUDIOS lo contempla para la categoría
+  puntaje        Decimal?    @db.Decimal(8, 2)
+  /// Beneficio no puntuable, informativo
+  beneficio      String?
+  reconocidoEl   DateTime?   @db.Date
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+  documento   Documento?  @relation(fields: [documentoId], references: [id])
+
+  @@index([funcionarioId])
+}
+
+enum TipoEstudio {
+  TITULO
+  DIPLOMADO
+  POSTITULO
+  MAGISTER
+  DOCTORADO
+}
+
+/// Cada cambio de nivel queda registrado. Exactamente un registro por funcionario con fechaHasta = null (el vigente).
+model NivelHistorico {
+  id              String      @id @default(uuid(7))
+  funcionarioId   String
+  /// Nivel 15 (ingreso) a 1 (máximo); la dirección de la numeración es parámetro (regla NIVELES)
+  nivel           Int
+  fechaDesde      DateTime    @db.Date
+  fechaHasta      DateTime?   @db.Date
+  puntajeAlCambio Decimal     @db.Decimal(8, 2)
+  decretoNumero   String?
+  decretoFecha    DateTime?   @db.Date
+  documentoId     String?
+  motivo          MotivoNivel
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+  documento   Documento?  @relation(fields: [documentoId], references: [id])
+
+  @@index([funcionarioId, fechaDesde])
+}
+
+enum MotivoNivel {
+  INGRESO
+  ASCENSO
+  HOMOLOGACION
+  AJUSTE
+}
+
+// ---------------------------------------------------------------------------
+// Calificaciones (BT 4.6)
+// ---------------------------------------------------------------------------
+
+/// Proceso anual de calificación de una institución, con su comisión y sus factores.
+model ProcesoCalificacion {
+  id            String        @id @default(uuid(7))
+  institucionId String
+  /// Nombre visible, p. ej. "Calificación 2025"
+  nombre        String
+  periodoDesde  DateTime      @db.Date
+  periodoHasta  DateTime      @db.Date
+  estado        EstadoProceso @default(ABIERTO)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  institucion    Institucion               @relation(fields: [institucionId], references: [id])
+  factores       FactorCalificacion[]
+  comision       ComisionCalificacion[]
+  calificaciones CalificacionFuncionario[]
+
+  @@index([institucionId, periodoDesde])
+}
+
+enum EstadoProceso {
+  ABIERTO
+  CERRADO
+}
+
+/// Factor o subfactor de calificación con su ponderación. Un subfactor apunta a su factor con padreId.
+model FactorCalificacion {
+  id          String   @id @default(uuid(7))
+  procesoId   String
+  nombre      String
+  padreId     String?
+  ponderacion Decimal  @db.Decimal(5, 2)
+  orden       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  proceso     ProcesoCalificacion  @relation(fields: [procesoId], references: [id])
+  padre       FactorCalificacion?  @relation("Subfactores", fields: [padreId], references: [id])
+  subfactores FactorCalificacion[] @relation("Subfactores")
+
+  @@index([procesoId])
+}
+
+/// Resultado de un funcionario en un proceso: notas por factor, puntaje final y lista.
+model CalificacionFuncionario {
+  id              String   @id @default(uuid(7))
+  procesoId       String
+  funcionarioId   String
+  /// Notas por factor y subfactor: { factorId: nota }
+  puntajes        Json
+  puntajeFinal    Decimal  @db.Decimal(6, 2)
+  /// Lista según reglamento (p. ej. "Lista 1")
+  lista           String?
+  actaDocumentoId String?
+  observaciones   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  proceso     ProcesoCalificacion @relation(fields: [procesoId], references: [id])
+  funcionario Funcionario         @relation(fields: [funcionarioId], references: [id])
+  acta        Documento?          @relation(fields: [actaDocumentoId], references: [id])
+  notasMerito NotaMerito[]
+
+  @@unique([procesoId, funcionarioId])
+}
+
+/// Anotación de mérito o demérito asociada a una calificación.
+model NotaMerito {
+  id             String   @id @default(uuid(7))
+  calificacionId String
+  tipo           TipoNota
+  descripcion    String
+  fecha          DateTime @db.Date
+  documentoId    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  calificacion CalificacionFuncionario @relation(fields: [calificacionId], references: [id])
+  documento    Documento?              @relation(fields: [documentoId], references: [id])
+
+  @@index([calificacionId])
+}
+
+enum TipoNota {
+  MERITO
+  DEMERITO
+}
+
+/// Integrante de la comisión evaluadora de un proceso.
+model ComisionCalificacion {
+  id        String   @id @default(uuid(7))
+  procesoId String
+  nombre    String
+  rol       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proceso ProcesoCalificacion @relation(fields: [procesoId], references: [id])
+
+  @@index([procesoId])
+}
+
+// ---------------------------------------------------------------------------
+// Documentos (BT 4.8)
+// ---------------------------------------------------------------------------
+
+/// Archivo adjunto: certificado, título, resolución, decreto, acta. Se guarda en disco del servidor, fuera de /public,
+/// y se sirve solo por rutas autenticadas. Los documentos institucionales no tienen funcionario.
+model Documento {
+  id            String        @id @default(uuid(7))
+  institucionId String
+  funcionarioId String?
+  tipo          TipoDocumento
+  nombre        String
+  /// Ruta relativa dentro del almacenamiento local (DOCUMENTOS_DIR)
+  ruta          String
+  mime          String
+  /// Tamaño en bytes
+  tamano        Int
+  /// SHA-256 del contenido, para la exportación integral y detección de duplicados
+  hash          String
+  subidoPorId   String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  institucion Institucion  @relation(fields: [institucionId], references: [id])
+  funcionario Funcionario? @relation(fields: [funcionarioId], references: [id])
+  subidoPor   User         @relation(fields: [subidoPorId], references: [id])
+
+  experiencias   Experiencia[]
+  bienios        Bienio[]
+  capacitaciones Capacitacion[]
+  estudios       Estudio[]
+  niveles        NivelHistorico[]
+  actas          CalificacionFuncionario[]
+  notasMerito    NotaMerito[]
+
+  @@index([funcionarioId])
+  @@index([institucionId, tipo])
+}
+
+enum TipoDocumento {
+  CERTIFICADO_CAPACITACION
+  TITULO
+  RESOLUCION
+  DECRETO
+  ACTA
+  CONTRATO
+  OTRO
+}
+
+// ---------------------------------------------------------------------------
+// Parametrización con vigencia (BT 5)
+// ---------------------------------------------------------------------------
+
+/// Regla del reglamento comunal con vigencia. No se edita: se cierra (vigenteHasta) y se crea una nueva versión,
+/// así el histórico nunca cambia. El motor recibe las reglas vigentes a una fecha; nunca las consulta por su cuenta.
+model ReglaCarrera {
+  id            String     @id @default(uuid(7))
+  institucionId String
+  tipo          TipoRegla
+  /// null = todas las categorías
+  categoria     Categoria?
+  vigenteDesde  DateTime   @db.Date
+  vigenteHasta  DateTime?  @db.Date
+  /// Estructura según tipo (docs 04 y 14)
+  parametros    Json
+  /// Artículo del reglamento comunal o decreto que la sustenta
+  fuente        String
+  creadoPorId   String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  institucion    Institucion    @relation(fields: [institucionId], references: [id])
+  creadoPor      User           @relation(fields: [creadoPorId], references: [id])
+  bienios        Bienio[]
+  capacitaciones Capacitacion[]
+
+  @@index([institucionId, tipo, vigenteDesde])
+}
+
+enum TipoRegla {
+  PUNTOS_BIENIO
+  DIAS_BIENIO
+  PRORRATEO_JORNADA
+  TABLA_CAPACITACION
+  TOPE_CAPACITACION_ANUAL
+  ARRASTRE_EXCEDENTE
+  PUNTAJE_ESTUDIOS
+  UMBRAL_NIVEL
+  NIVELES
+  PERIODO
+  CALIFICACION
+  ALERTAS
+}
+
+// ---------------------------------------------------------------------------
+// Alertas (subcriterios 8 y 13)
+// ---------------------------------------------------------------------------
+
+/// Aviso automático de un hito pendiente o próximo. Idempotente: una sola por funcionario, tipo y fecha de hito.
+model Alerta {
+  id             String       @id @default(uuid(7))
+  funcionarioId  String
+  tipo           TipoAlerta
+  fechaHito      DateTime     @db.Date
+  mensaje        String
+  estado         EstadoAlerta @default(ACTIVA)
+  generadaEl     DateTime     @default(now())
+  atendidaPorId  String?
+  atendidaEl     DateTime?
+  /// Nota al atender o motivo al descartar
+  resolucionNota String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+  atendidaPor User?       @relation(fields: [atendidaPorId], references: [id])
+
+  @@unique([funcionarioId, tipo, fechaHito])
+  @@index([estado, tipo])
+}
+
+enum TipoAlerta {
+  BIENIO_PROXIMO
+  BIENIO_PENDIENTE_RECONOCER
+  NIVEL_ALCANZADO
+  NIVEL_PROXIMO
+  CAPACITACION_POR_VENCER_PERIODO
+  CALIFICACION_PENDIENTE
+  DOCUMENTO_FALTANTE
+}
+
+enum EstadoAlerta {
+  ACTIVA
+  ATENDIDA
+  DESCARTADA
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios (Better Auth), accesos, auditoría y respaldos
+// ---------------------------------------------------------------------------
+
+/// Cuenta de usuario. Tabla de Better Auth con campos propios: rol (ADMIN | SUPERVISION | FUNCIONARIO, plugin admin),
+/// institución, funcionario asociado (portal) y obligación de cambiar la contraseña en el primer ingreso.
+/// La desactivación se hace con `banned` (plugin admin); los usuarios no se borran.
+model User {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  /// Plugin admin: ADMIN, SUPERVISION o FUNCIONARIO
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
+  /// Campos propios
+  institucionId       String?
+  funcionarioId       String? @unique
+  debeCambiarPassword Boolean @default(true)
+
+  sessions Session[]
+  accounts Account[]
+
+  institucion      Institucion?   @relation(fields: [institucionId], references: [id])
+  funcionario      Funcionario?   @relation(fields: [funcionarioId], references: [id])
+  accesos          Acceso[]
+  auditorias       Auditoria[]
+  documentos       Documento[]
+  reglasCreadas    ReglaCarrera[]
+  alertasAtendidas Alerta[]
+
+  @@index([institucionId])
+  @@map("user")
+}
+
+/// Sesión de Better Auth, almacenada en base de datos para poder revocarla.
+model Session {
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  /// Plugin admin: id del administrador que suplanta esta sesión
+  impersonatedBy String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+/// Credencial de Better Auth. Para correo y contraseña guarda el hash en `password`.
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("account")
+}
+
+/// Tokens de verificación de Better Auth (restablecimiento de contraseña, etc.).
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+/// Contador del límite de intentos de Better Auth, por IP y ruta. En base de datos para que sobreviva reinicios,
+/// se comparta entre instancias y las pruebas puedan limpiarlo.
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+/// Registro de accesos (BT 3.2): cada intento de inicio de sesión, exitoso o no.
+model Acceso {
+  id        String   @id @default(uuid(7))
+  usuarioId String?
+  email     String
+  exito     Boolean
+  ip        String
+  userAgent String
+  fecha     DateTime @default(now())
+
+  usuario User? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([email, fecha])
+  @@index([fecha])
+}
+
+/// Bitácora de cambios (BT 4.9, subcriterio 14). Inmutable: sin edición ni borrado desde la aplicación.
+/// Se escribe en la misma transacción que el cambio; si falla la auditoría, falla el cambio.
+model Auditoria {
+  id        String          @id @default(uuid(7))
+  usuarioId String
+  fecha     DateTime        @default(now())
+  /// Nombre del modelo afectado: "Funcionario", "Capacitacion"...
+  entidad   String
+  entidadId String
+  accion    AccionAuditoria
+  /// Valor anterior de los campos que cambiaron
+  antes     Json?
+  /// Valor nuevo de los campos que cambiaron
+  despues   Json?
+  detalle   String?
+
+  usuario User @relation(fields: [usuarioId], references: [id])
+
+  @@index([entidad, entidadId])
+  @@index([usuarioId, fecha])
+  @@index([fecha])
+}
+
+enum AccionAuditoria {
+  CREAR
+  EDITAR
+  ELIMINAR
+  RECONOCER
+  CALIFICAR
+  IMPORTAR
+  EXPORTAR
+  LOGIN
+  CAMBIO_REGLA
+}
+
+/// Evidencia de respaldos (subcriterio 15): la alimenta el script de respaldo y la muestra el módulo Respaldos.
+model Respaldo {
+  id           String    @id @default(uuid(7))
+  fecha        DateTime
+  /// "bd" o "archivos"
+  tipo         String
+  destino      String
+  /// Tamaño en bytes
+  tamano       BigInt
+  hash         String
+  /// "OK" o "ERROR"
+  resultado    String
+  duracionSeg  Int
+  /// Fecha de la restauración de prueba que verificó este respaldo
+  verificadoEl DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([fecha])
 }
