@@ -30,11 +30,19 @@ Tailwind CSS 4 · Vitest · Playwright · pnpm. Decisiones y alternativas descar
 ```bash
 pnpm install               # pnpm 11; los scripts de instalación permitidos están en pnpm-workspace.yaml
 cp .env.example .env       # completar valores (ver docs/17-runbook-y-entrega.md)
-pnpm exec prisma generate  # cliente Prisma en src/generated/prisma (ignorado por git)
+docker compose up -d db    # PostgreSQL 16 en localhost:5436 (usuario app, base carrera)
+pnpm db:migrate:dev        # aplica migraciones y regenera el cliente en src/generated/prisma (ignorado por git)
 pnpm dev
 ```
 
-Verificación: `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm build`.
+Verificación: `pnpm lint`, `pnpm typecheck`, `pnpm test` (unitarios) y `pnpm build`.
+
+Primer ADMIN e institución de demostración: `pnpm seed:bootstrap` (lee `SEED_ADMIN_EMAIL` y
+`SEED_ADMIN_PASSWORD` de `.env`; la cuenta debe cambiar la contraseña al primer ingreso).
+
+Pruebas de extremo a extremo (`docs/16`): `pnpm test:e2e` usa el servidor de desarrollo si está levantado
+(o lo inicia), crea un usuario FUNCIONARIO de prueba con contraseña aleatoria por corrida y prueba el flujo
+de acceso en tres viewports con auditoría de accesibilidad (axe). Requiere la base y el arranque anteriores.
 
 ## Estructura objetivo
 
