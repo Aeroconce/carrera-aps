@@ -8,12 +8,14 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 const RUTAS_PUBLICAS = new Set(["/login"]);
+/** Vistas de impresión de reportes: las abre Chromium en el servidor con un token firmado, sin cookie (doc 10) */
+const PREFIJOS_PUBLICOS = ["/imprimir/"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const haySesion = Boolean(getSessionCookie(request, { cookiePrefix: "carrera-aps" }));
 
-  if (!haySesion && !RUTAS_PUBLICAS.has(pathname)) {
+  if (!haySesion && !RUTAS_PUBLICAS.has(pathname) && !PREFIJOS_PUBLICOS.some((p) => pathname.startsWith(p))) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (haySesion && pathname === "/login") {

@@ -1,0 +1,40 @@
+// Textos del módulo Reportes (doc 06, doc 12).
+
+export const textosReportes = {
+  titulo: "Reportes",
+  intro: "Los nueve reportes de las bases, cada uno con alcance por funcionario, establecimiento o dotación completa, selector \"Situación al\" y exportación a Excel, CSV y PDF.",
+  abrir: "Abrir",
+  panel: "Panel",
+  volver: "Reportes",
+  filtros: {
+    alcance: "Alcance",
+    alcances: { dotacion: "Dotación completa", establecimiento: "Establecimiento", funcionario: "Funcionario" },
+    funcionario: "Funcionario",
+    establecimiento: "Establecimiento",
+    fecha: "Situación al",
+    categoria: "Categoría",
+    nivel: "Nivel",
+    tipoContrato: "Tipo de contrato",
+    estado: "Estado",
+    estados: { ACTIVO: "Activos a la fecha", INACTIVO: "Inactivos a la fecha", TODOS: "Todos" },
+    todos: "Todos",
+    elegir: "Elegir…",
+    aplicar: "Generar",
+    limpiar: "Restablecer",
+  },
+  exportar: { titulo: "Exportar", xlsx: "Excel", csv: "CSV", pdf: "PDF" },
+  encabezado: {
+    situacion: (fecha: string) => `Situación al ${fecha}`,
+    reglas: "Reglas aplicadas a esa fecha",
+    generado: (fecha: string, usuario: string) => `Generado el ${fecha} por ${usuario}`,
+    funcionarios: (n: number) => (n === 1 ? "1 funcionario" : `${n} funcionarios`),
+  },
+  tabla: { vacio: "Sin filas para los filtros elegidos.", totales: "Totales", scrollHorizontal: "Desliza para ver más columnas" },
+  paginacion: {
+    anterior: "Anterior",
+    siguiente: "Siguiente",
+    mostrando: (desde: number, hasta: number, total: number) => `Filas ${desde} a ${hasta} de ${total}`,
+  },
+  filas: (n: number) => (n === 1 ? "1 fila" : `${n} filas`),
+  errorExportar: "No se pudo generar el archivo. Reintenta; si persiste, avisa al administrador.",
+} as const;

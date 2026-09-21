@@ -83,6 +83,8 @@ export interface FuncionarioEntrada {
   categoria: Categoria;
   fechaIngreso: FechaCivil;
   estado?: "ACTIVO" | "INACTIVO";
+  /** Fecha de egreso si está dado de baja: a una fecha anterior sigue contando como activo */
+  fechaEgreso?: FechaCivil | null;
   apertura?: AperturaEntrada | null;
   experiencias: ExperienciaEntrada[];
   bienios: BienioRegistrado[];

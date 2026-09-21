@@ -53,7 +53,7 @@ export function calcularEstadoCarrera(
 ): EstadoCarrera {
   const { categoria } = funcionario;
   const apertura = funcionario.apertura ?? null;
-  const activo = funcionario.estado !== "INACTIVO";
+  const activo = estaActivoA(funcionario, fechaCorte);
 
   if (apertura && apertura.fecha > fechaCorte) {
     return estadoSinInformacion(funcionario, fechaCorte, reglas);
@@ -110,6 +110,12 @@ export function calcularEstadoCarrera(
   };
 }
 
+/** Activo a la fecha de corte: no está dado de baja, o su egreso es posterior a esa fecha ("situación al"). */
+function estaActivoA(funcionario: FuncionarioEntrada, fechaCorte: FechaCivil): boolean {
+  if (funcionario.estado !== "INACTIVO") return true;
+  return funcionario.fechaEgreso != null && funcionario.fechaEgreso > fechaCorte;
+}
+
 function estadoSinInformacion(funcionario: FuncionarioEntrada, fechaCorte: FechaCivil, reglas: ConjuntoReglas): EstadoCarrera {
   const vacio = { categoria: funcionario.categoria, fechaIngreso: funcionario.fechaIngreso, experiencias: [], bienios: [] };
   const apertura = funcionario.apertura!;
@@ -119,7 +125,7 @@ function estadoSinInformacion(funcionario: FuncionarioEntrada, fechaCorte: Fecha
     fechaCorte,
     periodoActual: periodoDe(fechaCorte),
     sinInformacion: true,
-    activo: funcionario.estado !== "INACTIVO",
+    activo: estaActivoA(funcionario, fechaCorte),
     apertura: { fecha: apertura.fecha, puntajeTotal: puntos(apertura.puntajeTotal), desglosado: apertura.desglosado },
     bienios: { ...calcularBienios({ ...vacio, experiencias: [{ esPropia: true, fechaDesde: fechaCorte, fechaHasta: fechaCorte }] }, fechaCorte, reglas), proximoBienio: null, totalBienios: 0 },
     capacitacion: calcularCapacitacion([], fechaCorte, reglas, funcionario.categoria),

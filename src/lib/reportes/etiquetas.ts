@@ -1,0 +1,35 @@
+// Etiquetas en español de los valores de dominio que aparecen en los reportes (doc 12, glosario).
+
+export const ETIQUETAS = {
+  contrato: { TITULAR: "Titular", PLAZO_FIJO: "Plazo fijo", REEMPLAZO: "Reemplazo" },
+  estadoFuncionario: { ACTIVO: "Activo", INACTIVO: "Inactivo" },
+  motivoNivel: { APERTURA: "Apertura", INGRESO: "Ingreso", ASCENSO: "Ascenso", HOMOLOGACION: "Homologación", AJUSTE: "Ajuste" },
+  tipoCapacitacion: { CURSO: "Curso", DIPLOMADO: "Diplomado", SEMINARIO: "Seminario", PASANTIA: "Pasantía", OTRO: "Otro" },
+  tipoEstudio: { TITULO: "Título", DIPLOMADO: "Diplomado", POSTITULO: "Postítulo", MAGISTER: "Magíster", DOCTORADO: "Doctorado" },
+  tipoAlerta: {
+    BIENIO_PROXIMO: "Bienio próximo",
+    BIENIO_PENDIENTE_RECONOCER: "Bienio sin reconocer",
+    NIVEL_ALCANZADO: "Nivel alcanzado",
+    NIVEL_PROXIMO: "Nivel próximo",
+    CAPACITACION_POR_VENCER_PERIODO: "Cierre de período",
+    CALIFICACION_PENDIENTE: "Calificación pendiente",
+    DOCUMENTO_FALTANTE: "Documento faltante",
+  },
+  tipoRegla: {
+    PUNTOS_BIENIO: "Puntos por bienio",
+    DIAS_BIENIO: "Cómputo del bienio",
+    PRORRATEO_JORNADA: "Prorrateo por jornada",
+    TABLA_CAPACITACION: "Tabla de capacitación",
+    TOPE_CAPACITACION_ANUAL: "Tope anual de capacitación",
+    ARRASTRE_EXCEDENTE: "Arrastre de excedente",
+    PUNTAJE_ESTUDIOS: "Puntaje de estudios",
+    UMBRAL_NIVEL: "Umbrales de nivel",
+    NIVELES: "Estructura de niveles",
+    PERIODO: "Período de capacitación",
+    CALIFICACION: "Calificación",
+    ALERTAS: "Alertas",
+  },
+  bienioEstado: { enSaldo: "En saldo de apertura", reconocido: "Reconocido", pendiente: "Cumplido, sin reconocer" },
+  experiencia: { propia: "Propia", reconocida: "Reconocida" },
+  nivelMaximo: "Nivel máximo alcanzado",
+} as const;

@@ -27,6 +27,7 @@ export function aEntradaMotor(f: FuncionarioConHistorial): FuncionarioEntrada {
     categoria: f.categoria,
     fechaIngreso: desdeDate(f.fechaIngreso),
     estado: f.estado,
+    fechaEgreso: f.fechaEgreso ? desdeDate(f.fechaEgreso) : null,
     apertura: f.apertura
       ? {
           fecha: desdeDate(f.apertura.fecha),
