@@ -65,6 +65,8 @@ const ICONOS: Record<string, LucideIcon> = {
 interface Props {
   usuario: { nombre: string; rol: Rol };
   modoDemo: boolean;
+  /** Alertas activas de la institución, para el contador del menú (doc 13 F7) */
+  alertasActivas?: number;
   children: ReactNode;
 }
 
@@ -72,7 +74,7 @@ function esActiva(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function ShellAdmin({ usuario, modoDemo, children }: Props) {
+export function ShellAdmin({ usuario, modoDemo, alertasActivas = 0, children }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const [saliendo, iniciarSalida] = useTransition();
@@ -93,6 +95,11 @@ export function ShellAdmin({ usuario, modoDemo, children }: Props) {
                   <SidebarMenuButton isActive={esActiva(pathname, item.href)} tooltip={item.etiqueta} render={<Link href={item.href} />}>
                     <Icono />
                     <span>{item.etiqueta}</span>
+                    {item.href === "/alertas" && alertasActivas > 0 && (
+                      <span className="ml-auto rounded-full bg-institucional px-1.5 text-[0.6875rem] font-medium text-white group-data-[collapsible=icon]:hidden" aria-label={`${alertasActivas} alertas activas`}>
+                        {alertasActivas}
+                      </span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               );

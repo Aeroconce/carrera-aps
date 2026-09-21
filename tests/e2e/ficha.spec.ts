@@ -1,7 +1,7 @@
 // Flujos de la ficha (doc 13: F2 alta con saldo de apertura, F3 capacitación, F4 reconocer bienio, F5 cambio de
 // nivel; doc 05 módulo 2: editar y dar de baja). Corre con la sesión del ADMIN de demostración (SEED_ADMIN_* en
 // .env), en serie, y crea un funcionario de prueba que borra al final para no ensuciar la demostración.
-// Con E2E_CAPTURAS=1 además guarda capturas de cada diálogo en test-results/capturas/.
+// Con E2E_CAPTURAS=1 además guarda capturas de cada diálogo en capturas/.
 
 import "dotenv/config";
 import AxeBuilder from "@axe-core/playwright";
@@ -20,13 +20,15 @@ async function entrarComoAdmin(page: Page) {
   await page.getByLabel("Correo").fill(email);
   await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  // Arranque en frío del servidor de desarrollo: la primera entrada compila varias rutas
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
 }
 
 async function borrarFuncionarioDePrueba() {
   const f = await prisma.funcionario.findFirst({ where: { rut: RUT_PRUEBA } });
   if (!f) return;
   const where = { funcionarioId: f.id };
+  await prisma.alerta.deleteMany({ where });
   await prisma.excedenteCapacitacion.deleteMany({ where });
   await prisma.capacitacion.deleteMany({ where });
   await prisma.bienio.deleteMany({ where });
@@ -43,7 +45,7 @@ async function sinViolacionesAxe(page: Page) {
 }
 
 async function capturar(page: Page, nombre: string, proyecto: string) {
-  if (capturas) await page.screenshot({ path: `test-results/capturas/ficha-${nombre}-${proyecto}.png`, fullPage: true });
+  if (capturas) await page.screenshot({ path: `capturas/ficha-${nombre}-${proyecto}.png`, fullPage: true });
 }
 
 test.describe("ficha del funcionario", () => {
@@ -207,8 +209,8 @@ test.describe("ficha del funcionario", () => {
 
     // El historial muestra los actos registrados
     await page.goto(`${fichaUrl}?pestana=historial`);
-    await expect(page.getByRole("row").filter({ hasText: "APERTURA" })).toBeVisible();
-    await expect(page.getByRole("row").filter({ hasText: "ELIMINAR" })).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Apertura" }).first()).toBeVisible();
+    await expect(page.getByRole("row").filter({ hasText: "Baja" }).first()).toBeVisible();
     await capturar(page, "historial", proyecto);
   });
 });

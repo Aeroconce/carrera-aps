@@ -159,3 +159,11 @@
     }
   }
 }
+
+/* Impresión (PDF con Chromium, doc 10): fondo blanco y sin sombras; el margen lo pone la impresión */
+@media print {
+  html,
+  body {
+    background: var(--color-superficie);
+  }
+}

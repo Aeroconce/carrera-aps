@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import { Textarea } from "@/components/ui/textarea";
 import type { RespuestaAccion } from "@/lib/acciones/tipos";
 import type { VariantProps } from "class-variance-authority";
@@ -164,12 +165,26 @@ export function DialogoFormulario({
                     </select>
                   ) : campo.tipo === "textarea" ? (
                     <Textarea id={campo.nombre} name={campo.nombre} defaultValue={String(campo.valorInicial ?? "")} required={campo.requerido} aria-invalid={invalido} rows={3} />
+                  ) : campo.tipo === "number" ? (
+                    <EntradaNativa
+                      id={campo.nombre}
+                      name={campo.nombre}
+                      type="number"
+                      inputMode="decimal"
+                      defaultValue={campo.valorInicial === null || campo.valorInicial === undefined ? "" : String(campo.valorInicial)}
+                      required={campo.requerido}
+                      min={campo.min}
+                      max={campo.max}
+                      step={campo.paso}
+                      aria-invalid={invalido}
+                      className="h-9"
+                    />
                   ) : (
                     <Input
                       id={campo.nombre}
                       name={campo.nombre}
                       type={campo.tipo === "fecha" ? "text" : campo.tipo}
-                      inputMode={campo.tipo === "fecha" ? "numeric" : campo.tipo === "number" ? "decimal" : undefined}
+                      inputMode={campo.tipo === "fecha" ? "numeric" : undefined}
                       placeholder={campo.tipo === "fecha" ? "dd/mm/aaaa" : campo.placeholder}
                       defaultValue={campo.valorInicial === null || campo.valorInicial === undefined ? "" : String(campo.valorInicial)}
                       required={campo.requerido}

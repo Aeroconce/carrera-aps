@@ -9,6 +9,7 @@ import { z } from "zod";
 import { exigirSesion, type SesionActual } from "@/lib/auth/sesion";
 import { aEntradaMotor, cargarFuncionario, type FuncionarioConHistorial } from "@/lib/carrera/funcionario";
 import { cargarReglas } from "@/lib/carrera/reglas";
+import { sincronizarAlertasDeFuncionario } from "@/lib/db/alertas";
 import * as db from "@/lib/db/carrera";
 import { prisma } from "@/lib/db/prisma";
 import { hoyEnChile, parsearChileno, type FechaCivil } from "@/lib/fechas/civil";
@@ -117,6 +118,15 @@ async function contextoDe(funcionarioId: string): Promise<Contexto | RespuestaAc
   return { sesion, funcionario, reglas: await cargarReglas(funcionario.institucionId) };
 }
 
+/** Tras registrar un hecho, las alertas del funcionario se recalculan; un fallo aquí no anula lo guardado. */
+async function refrescarAlertas(usuarioId: string, funcionarioId: string): Promise<void> {
+  try {
+    await sincronizarAlertasDeFuncionario({ usuarioId }, funcionarioId);
+  } catch (error) {
+    console.error("sincronizarAlertasDeFuncionario", funcionarioId, error);
+  }
+}
+
 function esError(x: unknown): x is RespuestaAccion<never> {
   return typeof x === "object" && x !== null && "ok" in x && (x as { ok: boolean }).ok === false;
 }
@@ -162,6 +172,7 @@ export async function registrarCapacitacionAction(funcionarioId: string, fd: For
       { ...d, periodo, notaOEvaluacion: d.notaOEvaluacion },
       ctx.reglas,
     );
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true, data: { id: creada.id } };
   } catch (error) {
@@ -205,6 +216,7 @@ export async function reconocerBienioAction(funcionarioId: string, fd: FormData)
       decretoNumero: d.decretoNumero,
       decretoFecha: d.decretoFecha,
     });
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true, data: { id: guardado.id } };
   } catch (error) {
@@ -247,6 +259,7 @@ export async function registrarCambioNivelAction(funcionarioId: string, fd: Form
       decretoNumero: d.decretoNumero,
       decretoFecha: d.decretoFecha,
     });
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true, data: { id: nuevo.id } };
   } catch (error) {
@@ -278,6 +291,7 @@ export async function registrarEstudioAction(funcionarioId: string, fd: FormData
   }
   try {
     const creado = await db.registrarEstudio({ usuarioId: ctx.sesion.user.id }, funcionarioId, d);
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true, data: { id: creado.id } };
   } catch (error) {
@@ -305,6 +319,7 @@ export async function registrarExperienciaAction(funcionarioId: string, fd: Form
   if (!datos.success) return respuestaValidacion(datos.error);
   try {
     const creada = await db.registrarExperiencia({ usuarioId: ctx.sesion.user.id }, funcionarioId, datos.data);
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true, data: { id: creada.id } };
   } catch (error) {
@@ -385,6 +400,7 @@ export async function crearFuncionarioAction(fd: FormData): Promise<RespuestaAcc
           fuente: apertura.data.aperturaFuente,
         }, institucion.nombre)
       : await db.crearFuncionario({ usuarioId: sesion.user.id }, base, reglas, institucion.nombre);
+    await refrescarAlertas(sesion.user.id, creado.id);
     revalidatePath("/funcionarios");
     return { ok: true, data: { id: creado.id } };
   } catch (error) {
@@ -410,6 +426,7 @@ export async function actualizarFuncionarioAction(funcionarioId: string, fd: For
   }
   try {
     await db.actualizarFuncionario({ usuarioId: ctx.sesion.user.id }, funcionarioId, d);
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     revalidatePath("/funcionarios");
     return { ok: true, data: { id: funcionarioId } };
@@ -433,6 +450,7 @@ export async function darDeBajaAction(funcionarioId: string, fd: FormData): Prom
   }
   try {
     await db.darDeBaja({ usuarioId: ctx.sesion.user.id }, funcionarioId, datos.data);
+    await refrescarAlertas(ctx.sesion.user.id, funcionarioId);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     revalidatePath("/funcionarios");
     return { ok: true, data: { id: funcionarioId } };

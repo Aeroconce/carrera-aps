@@ -169,7 +169,17 @@ export const textosFuncionarios = {
       comoSeCalcula: "¿Cómo se calcula?",
     },
     alertas: { vacio: "Sin alertas activas para este funcionario.", tipo: "Tipo", hito: "Fecha del hito", mensaje: "Detalle" },
-    historial: { vacio: "Sin cambios registrados.", fecha: "Fecha", usuario: "Usuario", accion: "Acción", entidad: "Entidad", detalle: "Detalle" },
+    historial: {
+      vacio: "Sin cambios registrados.",
+      fecha: "Fecha",
+      usuario: "Usuario",
+      accion: "Acción",
+      entidad: "Entidad",
+      detalle: "Detalle",
+      verCambios: "Ver cambios",
+      sinCambios: "Sin campos registrados",
+      cambios: { titulo: "Cambios registrados", campo: "Campo", antes: "Valor anterior", despues: "Valor nuevo", cerrar: "Cerrar" },
+    },
     proximamente: "Este módulo se habilita en la siguiente fase.",
     columnasNivel: { nivel: "Nivel", desde: "Desde", hasta: "Hasta", puntaje: "Puntaje al cambio" },
     nombresAlerta: {

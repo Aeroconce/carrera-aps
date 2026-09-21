@@ -6,7 +6,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import type { Alcance, FiltrosReporte } from "@/lib/reportes/filtros";
 import { textosReportes } from "../textos";
 
@@ -63,7 +63,7 @@ export function FiltrosReporteForm({ reporteId, filtros, establecimientos, funci
       )}
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.fecha}
-        <Input type="date" name="fecha" defaultValue={filtros.fecha} required className="h-10 w-44" />
+        <EntradaNativa type="date" name="fecha" defaultValue={filtros.fecha} required className="h-10 w-44" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.categoria}
@@ -76,7 +76,7 @@ export function FiltrosReporteForm({ reporteId, filtros, establecimientos, funci
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.nivel}
-        <Input type="number" name="nivel" min={1} max={99} defaultValue={filtros.nivel ?? ""} className="h-10 w-20" />
+        <EntradaNativa type="number" name="nivel" min={1} max={99} defaultValue={filtros.nivel ?? ""} className="h-10 w-20" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.tipoContrato}

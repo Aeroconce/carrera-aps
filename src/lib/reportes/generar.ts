@@ -1,6 +1,7 @@
 // Generación de un reporte (doc 06): resuelve el alcance, calcula el estado de cada funcionario a la fecha de
 // corte con el motor (reglas vigentes a esa fecha) y arma las secciones según la definición. Solo lectura.
 
+import { cerradaManualmente, claveAlerta } from "@/lib/alertas/clave";
 import { listarFuncionarios, type FilaFuncionario } from "@/lib/carrera/listado";
 import { cargarReglas } from "@/lib/carrera/reglas";
 import { prisma } from "@/lib/db/prisma";
@@ -86,13 +87,30 @@ export async function generarReporte(
     });
   }
 
+  // Panel de alertas: las cerradas a mano en el módulo Alertas no se vuelven a listar
+  let alertasCerradas: Set<string> | undefined;
+  if (definicion.id === "alertas" && filas.length > 0) {
+    const persistidas = await prisma.alerta.findMany({
+      where: { funcionarioId: { in: filas.map((f) => f.funcionario.id) }, estado: { not: "ACTIVA" } },
+      select: { funcionarioId: true, tipo: true, fechaHito: true, mensaje: true, estado: true, resolucionNota: true },
+    });
+    const porClave = new Map(persistidas.map((a) => [claveAlerta(a.funcionarioId, a.tipo, desdeDate(a.fechaHito)), { ...a, fechaHito: desdeDate(a.fechaHito) }]));
+    alertasCerradas = new Set<string>();
+    for (const fila of filas) {
+      for (const a of fila.alertas) {
+        const clave = claveAlerta(fila.funcionario.id, a.tipo, a.fechaHito);
+        if (cerradaManualmente(porClave.get(clave), a)) alertasCerradas.add(`${clave}|${a.mensaje}`);
+      }
+    }
+  }
+
   return {
     id: definicion.id,
     numero: definicion.numero,
     nombre: definicion.nombre,
     descripcion: definicion.descripcion,
     archivo: definicion.archivo,
-    secciones: definicion.generar({ filas, fechaCorte: filtros.fecha, reglas, calificaciones }),
+    secciones: definicion.generar({ filas, fechaCorte: filtros.fecha, reglas, calificaciones, alertasCerradas }),
     contexto: {
       institucion: institucion.nombre,
       fechaCorte: filtros.fecha,

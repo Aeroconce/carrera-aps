@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import { crearFuncionarioAction } from "@/lib/acciones/funcionarios";
 import { textosNuevo as t } from "./textos";
 
@@ -61,9 +62,11 @@ export function FormularioNuevoFuncionario({ establecimientos }: { establecimien
     });
   }
 
-  const entrada = (nombre: string, extra: React.ComponentProps<typeof Input> = {}) => (
-    <Input id={nombre} name={nombre} aria-invalid={Boolean(errores[nombre]?.length)} className="h-9" {...extra} />
-  );
+  const entrada = (nombre: string, extra: React.ComponentProps<"input"> = {}) => {
+    const props = { id: nombre, name: nombre, "aria-invalid": Boolean(errores[nombre]?.length), className: "h-9", ...extra };
+    // Los campos numéricos usan la entrada nativa (ver entrada-nativa.tsx)
+    return extra.type === "number" ? <EntradaNativa {...props} /> : <Input {...props} />;
+  };
   const fecha = (nombre: string) => entrada(nombre, { placeholder: "dd/mm/aaaa", inputMode: "numeric" });
 
   return (

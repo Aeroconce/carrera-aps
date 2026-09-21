@@ -2,10 +2,13 @@
 // carrera calculado por el motor. Las acciones (registrar, reconocer, cambiar nivel) se montan aparte.
 
 import type { ReactNode } from "react";
+import { DetalleAuditoria } from "@/components/dominio/detalle-auditoria";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { CarreraDeFuncionario } from "@/lib/carrera/funcionario";
 import { formatearFecha, formatearFechaHora, formatearMesAnio, formatearPuntos, formatearRut, puntosConUnidad } from "@/lib/formato";
+import { filasDeCambio } from "@/lib/auditoria/detalle";
+import { ETIQUETAS_AUDITORIA } from "@/lib/auditoria/etiquetas";
 import type { AlertaCalculada } from "@/lib/motor/alertas";
 import type { Auditoria } from "@/generated/prisma/client";
 import { textosFuncionarios } from "../textos";
@@ -151,7 +154,7 @@ export function SeccionExperiencia({ carrera, acciones, accionBienio }: { carrer
                         <Badge className="bg-correcto text-white">{te.reconocido}</Badge>
                       ) : (
                         <span className="flex items-center gap-2">
-                          <Badge className="bg-alerta text-white">{te.cumplidoSinReconocer}</Badge>
+                          <Badge className="border-alerta bg-alerta/10 text-tinta">{te.cumplidoSinReconocer}</Badge>
                           {accionBienio?.(b)}
                         </span>
                       )}
@@ -437,11 +440,16 @@ export function SeccionHistorial({ entradas }: { entradas: Array<Auditoria & { u
             <TableRow key={e.id}>
               <TableCell className="whitespace-nowrap">{formatearFechaHora(e.fecha)}</TableCell>
               <TableCell>{e.usuario.name}</TableCell>
-              <TableCell><Badge variant="outline">{e.accion}</Badge></TableCell>
-              <TableCell>{e.entidad}</TableCell>
+              <TableCell><Badge variant="outline">{ETIQUETAS_AUDITORIA.accion[e.accion] ?? e.accion}</Badge></TableCell>
+              <TableCell>{ETIQUETAS_AUDITORIA.entidad[e.entidad] ?? e.entidad}</TableCell>
               <TableCell className="max-w-md text-xs text-tinta-secundaria">
-                {e.detalle ?? ""}
-                {e.despues ? <span className="block truncate font-mono">{JSON.stringify(e.despues).slice(0, 160)}</span> : null}
+                <span className="block">{e.detalle ?? ""}</span>
+                <DetalleAuditoria
+                  filas={filasDeCambio(e.antes, e.despues)}
+                  titulo={`${ETIQUETAS_AUDITORIA.accion[e.accion] ?? e.accion} · ${ETIQUETAS_AUDITORIA.entidad[e.entidad] ?? e.entidad}`}
+                  descripcion={`${formatearFechaHora(e.fecha)} · ${e.usuario.name}`}
+                  textos={{ boton: th.verCambios, ...th.cambios, sinCambios: th.sinCambios }}
+                />
               </TableCell>
             </TableRow>
           ))}

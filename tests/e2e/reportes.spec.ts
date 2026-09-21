@@ -18,7 +18,8 @@ async function entrarComoAdmin(page: Page) {
   await page.getByLabel("Correo").fill(email);
   await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  // Arranque en frío del servidor de desarrollo: la primera entrada compila varias rutas
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
 }
 
 async function sinViolacionesAxe(page: Page) {
@@ -27,7 +28,7 @@ async function sinViolacionesAxe(page: Page) {
 }
 
 async function capturar(page: Page, nombre: string, proyecto: string) {
-  if (capturas) await page.screenshot({ path: `test-results/capturas/reportes-${nombre}-${proyecto}.png`, fullPage: true });
+  if (capturas) await page.screenshot({ path: `capturas/reportes-${nombre}-${proyecto}.png`, fullPage: true });
 }
 
 test.describe("reportes", () => {
@@ -114,7 +115,7 @@ test.describe("reportes", () => {
     expect(xlsx.headers()["content-disposition"]).toContain("carrera_al_2026-09-21.xlsx");
     const cuerpoXlsx = await xlsx.body();
     expect(cuerpoXlsx.subarray(0, 2).toString("latin1")).toBe("PK");
-    if (capturas) writeFileSync(`test-results/capturas/reportes-carrera-${proyecto}.xlsx`, cuerpoXlsx);
+    if (capturas) writeFileSync(`capturas/reportes-carrera-${proyecto}.xlsx`, cuerpoXlsx);
 
     const csv = await page.request.get(`${base}&formato=csv`);
     expect(csv.status()).toBe(200);
@@ -129,7 +130,7 @@ test.describe("reportes", () => {
     const cuerpoPdf = await pdf.body();
     expect(cuerpoPdf.subarray(0, 4).toString("latin1")).toBe("%PDF");
     expect(cuerpoPdf.length).toBeGreaterThan(5_000);
-    if (capturas) writeFileSync(`test-results/capturas/reportes-carrera-${proyecto}.pdf`, cuerpoPdf);
+    if (capturas) writeFileSync(`capturas/reportes-carrera-${proyecto}.pdf`, cuerpoPdf);
 
     const despues = await prisma.auditoria.count({ where: { accion: "EXPORTAR" } });
     expect(despues - antes).toBe(3);

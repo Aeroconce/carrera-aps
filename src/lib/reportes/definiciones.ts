@@ -3,6 +3,7 @@
 // tabulares; no consulta la base. El reporte 8 (históricos) es cualquiera de los anteriores con "Situación al":
 // aquí se materializa como el resumen de carrera con fecha por defecto al cierre del año anterior.
 
+import { claveAlerta } from "@/lib/alertas/clave";
 import type { FilaFuncionario } from "@/lib/carrera/listado";
 import { desdeDate, finDeAnio, type FechaCivil } from "@/lib/fechas/civil";
 import { formatearRut, nombreCompleto } from "@/lib/formato";
@@ -20,6 +21,8 @@ export interface EntradaReporte {
   reglas: ConjuntoReglas;
   /** Calificaciones de esos funcionarios hasta la fecha (solo se cargan si el reporte las necesita) */
   calificaciones: CalificacionReporte[];
+  /** Claves de alertas cerradas a mano (atendidas o descartadas) que el panel no debe volver a mostrar */
+  alertasCerradas?: Set<string>;
 }
 
 export interface DefinicionReporte {
@@ -521,7 +524,7 @@ const alertas: DefinicionReporte = {
   nombre: "Panel de alertas",
   descripcion: "Alertas automáticas activas a la fecha: bienios próximos y sin reconocer, niveles alcanzados o próximos, cierres de período y documentos faltantes.",
   archivo: "alertas",
-  generar: ({ filas }) => [
+  generar: ({ filas, alertasCerradas }) => [
     {
       id: "alertas",
       titulo: "Alertas",
@@ -531,7 +534,11 @@ const alertas: DefinicionReporte = {
         col("fechaHito", "Fecha del hito", "fecha", { ancho: 14 }),
         col("mensaje", "Detalle", "texto", { ancho: 60 }),
       ],
-      filas: filas.flatMap((fila) => fila.alertas.map((a) => ({ ...base(fila), tipo: ETIQUETAS.tipoAlerta[a.tipo], fechaHito: a.fechaHito, mensaje: a.mensaje }))),
+      filas: filas.flatMap((fila) =>
+        fila.alertas
+          .filter((a) => !alertasCerradas?.has(`${claveAlerta(fila.funcionario.id, a.tipo, a.fechaHito)}|${a.mensaje}`))
+          .map((a) => ({ ...base(fila), tipo: ETIQUETAS.tipoAlerta[a.tipo], fechaHito: a.fechaHito, mensaje: a.mensaje })),
+      ),
     },
   ],
 };

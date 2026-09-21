@@ -1,5 +1,5 @@
 // Capturas de las pantallas principales con la sesión del ADMIN de demostración (SEED_ADMIN_* en .env), para
-// revisión visual durante la construcción. Se activa con E2E_CAPTURAS=1; guarda en test-results/capturas/.
+// revisión visual durante la construcción. Se activa con E2E_CAPTURAS=1; guarda en capturas/.
 // No es una prueba de regresión (doc 09 las descartó): no compara imágenes, solo las produce.
 // Entra una sola vez por proyecto (el límite de intentos es por IP) y limpia el contador antes.
 
@@ -18,7 +18,8 @@ async function entrarComoAdmin(page: Page) {
   await page.getByLabel("Correo").fill(email);
   await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  // Arranque en frío del servidor de desarrollo: la primera entrada compila varias rutas
+  await expect(page).toHaveURL(/\/$/, { timeout: 30_000 });
 }
 
 test.describe("capturas", () => {
@@ -47,7 +48,7 @@ test.describe("capturas", () => {
       await page.goto(ruta);
       await page.waitForLoadState("networkidle");
       const nombre = ruta === "/" ? "inicio" : ruta.replace(/^\//, "").replace(/[^a-z0-9]+/gi, "-");
-      await page.screenshot({ path: `test-results/capturas/${nombre}-${testInfo.project.name}.png`, fullPage: true });
+      await page.screenshot({ path: `capturas/${nombre}-${testInfo.project.name}.png`, fullPage: true });
       expect(errores, "errores de página").toEqual([]);
     });
   }

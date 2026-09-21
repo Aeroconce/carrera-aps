@@ -16,7 +16,8 @@
     "test": "vitest run",
     "seed:bootstrap": "tsx prisma/seed/bootstrap.ts",
     "test:e2e": "playwright test",
-    "seed:demo": "tsx prisma/seed/demo.ts"
+    "seed:demo": "tsx prisma/seed/demo.ts",
+    "alertas:sincronizar": "tsx scripts/sincronizar-alertas.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

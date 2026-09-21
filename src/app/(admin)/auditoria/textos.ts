@@ -1,0 +1,38 @@
+// Textos del módulo Auditoría (doc 05 §11, doc 12).
+
+export const textosAuditoria = {
+  titulo: "Auditoría",
+  intro: "Bitácora completa e inmutable: quién hizo qué, cuándo y sobre qué registro, con el valor anterior y el nuevo de cada campo. Se escribe en la misma transacción que el cambio.",
+  accesos: "Registro de accesos",
+  exportar: { xlsx: "Excel", csv: "CSV" },
+  total: (n: number) => (n === 1 ? "1 registro" : `${n} registros`),
+  filtros: {
+    desde: "Desde",
+    hasta: "Hasta",
+    usuario: "Usuario",
+    entidad: "Entidad",
+    accion: "Acción",
+    funcionario: "Funcionario",
+    q: "Texto",
+    todos: "Todos",
+    todas: "Todas",
+    aplicar: "Filtrar",
+    limpiar: "Limpiar",
+  },
+  columnas: { fecha: "Fecha", usuario: "Usuario", accion: "Acción", entidad: "Entidad", funcionario: "Funcionario afectado", detalle: "Detalle", cambios: "Cambios" },
+  verCambios: "Ver cambios",
+  sinCambios: "Sin campos registrados",
+  detalle: { titulo: "Cambios registrados", campo: "Campo", antes: "Valor anterior", despues: "Valor nuevo", cerrar: "Cerrar" },
+  vacio: "No hay registros que coincidan con los filtros.",
+  paginacion: { anterior: "Anterior", siguiente: "Siguiente", mostrando: (desde: number, hasta: number, total: number) => `${desde} a ${hasta} de ${total}` },
+  accesosPagina: {
+    titulo: "Registro de accesos",
+    intro: "Cada intento de inicio de sesión, exitoso o no, con correo, dirección IP y navegador (BT 3.2).",
+    volver: "Auditoría",
+    columnas: { fecha: "Fecha", email: "Correo", usuario: "Usuario", resultado: "Resultado", ip: "IP", navegador: "Navegador" },
+    exitoso: "Exitoso",
+    fallido: "Fallido",
+    filtros: { email: "Correo", resultado: "Resultado", todos: "Todos", exitosos: "Exitosos", fallidos: "Fallidos", desde: "Desde", hasta: "Hasta", aplicar: "Filtrar", limpiar: "Limpiar" },
+    vacio: "Sin accesos registrados para los filtros elegidos.",
+  },
+} as const;
