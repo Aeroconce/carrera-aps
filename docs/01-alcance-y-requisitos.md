@@ -60,15 +60,16 @@ que el cálculo cuadre con la ley y el reglamento: son los que probará la Encar
 - Remuneraciones: el sistema no calcula sueldos; entrega los datos de carrera que el sistema de remuneraciones necesita.
 - Firma electrónica de decretos: se registra el decreto (número, fecha, PDF adjunto), no se firma dentro del sistema.
 
-## Supuestos a confirmar con el reglamento comunal (respuestas del foro, 16/09)
+## Lo que respondió el foro (21/09, doc 18)
 
-- Puntos por bienio y si varían por categoría.
-- Tabla de puntaje de capacitación (por horas, por evaluación, por tipo de actividad) y tope anual.
-- Regla de arrastre de excedentes: cuánto y por cuántos períodos.
-- Puntaje o beneficio por títulos, diplomados y postgrados, y en qué categorías aplica.
-- Umbrales de puntaje por nivel y categoría.
-- Factores y subfactores de calificación, escala de notas, listas, y cómo se determina la asignación de mérito.
-- Fecha de corte de los períodos (año calendario o período de calificación).
+- El reglamento comunal **no se entrega** con la licitación (respuesta 3): la parametrización se hace en la
+  implementación con antecedentes del Departamento. La demo usa la parametrización de demostración del doc 14
+  y lo declara en pantalla y en el Anexo N°3.
+- No hay migración histórica (respuestas 4, 13, 22): el sistema parte del grado y puntaje vigentes de cada
+  funcionario (doc 08, carga inicial).
+- Cuatro establecimientos y unos 320 funcionarios (respuesta 6).
+- Interoperabilidad: basta la capacidad (respuesta 14). Experiencia: no es causal de inadmisibilidad
+  (respuestas 1, 7 y 10).
 
-Mientras no lleguen, el sistema se construye con estos elementos como parámetros y la demo se carga con
-valores plausibles y consistentes, declarados como "parametrización de demostración".
+Los supuestos sobre puntos por bienio, tablas de capacitación, arrastre, estudios, umbrales y calificación
+siguen siendo parámetros con vigencia; sus valores reales se cargan en la implementación.

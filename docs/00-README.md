@@ -28,6 +28,7 @@ inventa**: los declara parámetros configurables y señala qué hay que confirma
 | `15-convenciones-de-codigo.md` | Idioma, capas, validación, auditoría obligatoria, errores, estilo, calidad automática, git |
 | `16-plan-de-pruebas-y-calidad.md` | Unitarias del motor, componentes, E2E en tres viewports con axe, recorrido manual, CI, congelamiento |
 | `17-runbook-y-entrega.md` | Servidor, despliegue, respaldos, monitoreo, incidentes, correo y guía para la comisión, manual de usuario |
+| `18-respuestas-foro.md` | Transcripción del foro (21/09) y qué cambia: sin migración histórica, carga inicial con saldo de apertura, 320 funcionarios, demo fuera de Chile permitida, todas las funcionalidades operativas |
 
 ## Principios que gobiernan el diseño
 

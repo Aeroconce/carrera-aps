@@ -7,6 +7,17 @@
 - Firewall: 22 (solo desde IPs del equipo), 80 y 443 abiertos. Nada más.
 - SSH por clave; contraseña deshabilitada.
 
+## Demo en VPS2 (hasta la adjudicación)
+
+La demo corre en VPS2 (Hostinger, fuera de Chile), amparada en la respuesta 9 del foro (doc 18). Condiciones:
+- Proyecto Compose propio (`docker compose -p carrera-demo`) con `db`, `web`, `worker` y `backup`, volúmenes
+  propios y puertos solo en 127.0.0.1: nada compartido con el radar ni con los otros sitios.
+- Subdominio dedicado (`demo-carrera.aeroconce.cl`) servido por el nginx ya existente en VPS2 como proxy inverso
+  al contenedor `web`, con certificado de certbot. Caddy no se usa en VPS2 porque nginx ocupa 80 y 443.
+- `.env` propio con `DOMINIO`, `DB_PASSWORD`, `BETTER_AUTH_SECRET` y `BETTER_AUTH_URL` del subdominio.
+- Al adjudicar, la producción se levanta en V2Networks (secciones siguientes) con base limpia y el reglamento
+  real; la demo se apaga y sus datos ficticios se borran.
+
 ## Dominio y TLS
 
 - Subdominio dedicado a la demo, por ejemplo `demo-carrera.aeroconce.cl`, apuntando por A al servidor.

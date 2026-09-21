@@ -1,38 +1,59 @@
 # 08 — Importación y datos de demostración
 
-## Importador desde Excel (BT 15, BT 8, plazo de 10 días)
+## Carga inicial desde la planilla del Departamento (doc 18, respuestas 4, 13 y 22)
 
-La migración desde planillas es obligatoria y es lo que hace posible implementar en 10 días. El importador
-es también la herramienta para cargar el dataset de la demo.
+No hay migración histórica. El Departamento entrega una planilla con la situación vigente de cada funcionario;
+el sistema parte de ese saldo y, desde la puesta en marcha, registra los movimientos hacia adelante. Este es
+el importador de la demo y de la implementación, y lo que hace posible el plazo de 10 días.
 
-**Plantillas** (descargables desde el módulo Importar, con hoja de instrucciones y ejemplos):
+**Plantilla `carga-inicial.xlsx`** (descargable desde Importar, con hoja de instrucciones), una fila por funcionario:
 
-| Plantilla | Columnas mínimas |
-|---|---|
-| `funcionarios.xlsx` | RUT, nombres, apellidos, categoría, tipo de contrato, fecha de ingreso, establecimiento, cargo, jornada, email |
-| `experiencia.xlsx` | RUT, institución, es propia (S/N), desde, hasta, jornada, fecha de reconocimiento |
-| `bienios_reconocidos.xlsx` | RUT, número de bienio, fecha cumplido, fecha reconocido, decreto |
-| `capacitaciones.xlsx` | RUT, nombre, institución, tipo, horas, inicio, término, nota, aprobado (S/N), otra comuna (S/N), período |
-| `estudios.xlsx` | RUT, tipo, nombre, institución, fecha obtención, fecha reconocimiento |
-| `niveles.xlsx` | RUT, nivel, desde, hasta, decreto, fecha decreto, motivo |
-| `calificaciones.xlsx` | RUT, período, puntaje final, lista, observaciones |
+| Columna | Obligatoria | Uso |
+|---|---|---|
+| RUT | sí | identificación; dígito verificador validado |
+| Nombres, Apellidos | sí | ficha |
+| Categoría (A a F) | sí | ficha y reglas por categoría |
+| Establecimiento | sí | debe existir en Parámetros |
+| Tipo de contrato | sí | titular, plazo fijo, reemplazo |
+| Fecha de ingreso | sí | ficha; ancla de bienios si falta la fecha del último bienio |
+| Grado (nivel) vigente | sí | nivel de apertura |
+| Fecha desde la que rige el grado | sí | el historial de niveles no nace vacío |
+| Puntaje vigente de experiencia | si el Departamento lo tiene | saldo de apertura desglosado |
+| Puntaje vigente de capacitación | si el Departamento lo tiene | saldo de apertura desglosado |
+| Puntaje vigente total | sí | saldo de apertura; sin desglose se declara "sin desglose" |
+| Fecha del último bienio reconocido | sí | ancla para proyectar el siguiente bienio |
+| N° de bienios reconocidos | recomendable | numeración de los bienios siguientes |
+| Excedente de capacitación pendiente del período anterior | si existe | entra como arrastre en el primer cierre de período |
+| Jornada (horas), cargo, correo | opcionales | ficha y portal |
 
-**Flujo**: subir archivo → validación (RUT válido, fechas coherentes, categoría válida, funcionario existente para las tablas hijas, duplicados) → informe de errores por fila → vista previa → confirmar → carga transaccional → registro en auditoría con conteo → recálculo del motor y regeneración de alertas.
+**Qué crea la carga** por fila, en una sola transacción auditada como `APERTURA`: el `Funcionario`, su
+`Apertura` (movimiento de apertura con fecha, saldos y fuente; doc 03), el `NivelHistorico` vigente con motivo
+`APERTURA` y la `fechaDesde` de la planilla, y el `ExcedenteCapacitacion` pendiente si viene. El motor suma el
+saldo de apertura como base antes de todo lo que acumule después (doc 04 §0). La bitácora muestra desde el
+día uno de dónde salió cada punto.
 
-**Decisión de diseño**: los bienios históricos ya reconocidos se importan como datos (con su decreto) y el motor solo calcula hacia adelante desde el último reconocido. Así una migración desde planillas con años de historia no obliga a reconstruir reconocimientos antiguos que quizá no cuadren con la regla actual.
+**Flujo**: subir archivo → validación (RUT válido, fechas coherentes, categoría y establecimiento válidos,
+grado dentro del rango de la regla NIVELES, duplicados) → informe de errores por fila y columna → vista previa
+→ confirmar → carga transaccional → recálculo del motor y regeneración de alertas.
+
+Las plantillas de historia (experiencia, bienios, capacitaciones, estudios, niveles, calificaciones) quedan
+fuera del alcance: la respuesta 13 descarta la migración de antecedentes históricos.
 
 ## Dataset de la demo
 
 La comisión va a probar con lo que encuentre. Una demo vacía o con tres registros puntúa como una que no existe. El dataset tiene que hacer visible cada subcriterio sin que nadie lo explique.
 
-**Institución**: "Departamento de Salud Municipal, Comuna de Demostración". Sin datos reales de Lota ni de ninguna persona real.
+**Institución**: "Departamento de Salud, I. Municipalidad de Lota" con sus cuatro establecimientos reales
+(respuesta 6 del foro): CESFAM Juan Cartes Arias, CESFAM Sergio Lagos Olave, CECOSF de Colcura y Departamento
+de Salud de Lota. Los establecimientos son instituciones públicas, no datos personales, y la respuesta 11 avala
+una solución hecha para Lota. **Ningún funcionario real**: nombres y RUT generados (dígito verificador válido).
+Nota visible en el pie de toda la demo: "Datos de demostración; dotación ficticia".
 
-**Establecimientos** (4): CESFAM Norte, CESFAM Sur, Posta Rural, Dirección DAS.
-
-**Dotación**: 250 funcionarios ficticios (nombres y RUT generados, RUT con dígito verificador válido para que las validaciones pasen).
+**Dotación**: 320 funcionarios ficticios (respuesta 6), cargados por la planilla de carga inicial con puesta en
+marcha ficticia el 01/01/2025, más los movimientos posteriores a esa fecha que hacen visibles los casos.
 
 Distribución:
-- Categoría A: 25 · B: 60 · C: 55 · D: 45 · E: 35 · F: 30.
+- Categoría A: 32 · B: 77 · C: 70 · D: 58 · E: 45 · F: 38.
 - Titulares 70 %, plazo fijo 22 %, reemplazo 8 %.
 - Fechas de ingreso entre 1998 y 2026, con densidad en 2010–2022, para producir entre 0 y 13 bienios.
 
@@ -67,6 +88,7 @@ Contraseñas generadas, distintas, entregadas por correo a `licitacion.cf@daslot
 
 ## Generación
 
-Script `prisma/seed/demo.ts`, determinista (semilla fija) para que la demo se pueda recrear idéntica. Usa
-el importador (no inserta directo) para que la carga quede auditada como lo estaría en producción. Al
-terminar, ejecuta el motor completo y genera las alertas.
+Script `prisma/seed/demo.ts`, determinista (semilla fija) para que la demo se pueda recrear idéntica. Usa la
+carga inicial (apertura) para los 320 funcionarios y registra los movimientos posteriores al 01/01/2025 con las
+mismas acciones de la aplicación, para que todo quede auditado como en producción. Al terminar, ejecuta el
+motor completo y genera las alertas.

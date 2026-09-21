@@ -105,3 +105,15 @@ Pedro Lagos, categoría C. 2021: 14 puntos calculados, tope 8 → aplicado 8, ex
 2. **Seed**: los cuatro funcionarios existen en la demo con exactamente estos datos, marcados en el cargo con "Caso 1" a "Caso 4".
 3. **Guía para la comisión**: los ejemplos 1 y 3 son el guion sugerido de verificación ("abra a María Pérez y compruebe…").
 4. **Anexo N°3**: se cita el ejemplo 1 al describir los subcriterios 4 a 7.
+
+## Notas de implementación (21/09)
+
+- En el código (`src/lib/reglas/demo.ts`) la versión 1 rige desde el 01/01/2015 y no desde el 01/01/2020: el
+  motor exige una regla vigente para cada hecho y los ejemplos tienen antecedentes desde 2015. El cambio de tope
+  8 → 10 el 01/01/2025 se mantiene y es lo que demuestra el subcriterio 10.
+- La demo tiene puesta en marcha ficticia el 01/01/2025 (doc 04 §0): el saldo de apertura de cada caso es su
+  situación al 31/12/2024. Para María Pérez: 5 bienios (50), capacitación 50, estudios 5, total 105, nivel 10;
+  después de la apertura entran el sexto bienio y las capacitaciones de 2025 y 2026, y el total llega a 129.
+- Ejemplo 2: con el algoritmo del doc 04 §5 (bienios cada dos años más la capacitación promedio) Juan Soto
+  cruza los 20 puntos el 15/11/2029 con su segundo bienio, no en 2035. El motor sigue el doc 04 y sus tests
+  esperan 15/11/2029.

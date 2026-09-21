@@ -58,6 +58,32 @@ enum TipoContrato { TITULAR PLAZO_FIJO REEMPLAZO }
 enum EstadoFuncionario { ACTIVO INACTIVO }
 ```
 
+### Apertura (carga inicial, doc 18)
+
+```prisma
+model Apertura {                 // movimiento de apertura: el saldo con que el funcionario entra al sistema
+  id                   String @id
+  funcionarioId        String @unique
+  fecha                DateTime      // día al que corresponden los saldos (la víspera de la puesta en marcha)
+  nivel                Int
+  nivelDesde           DateTime
+  puntajeTotal         Decimal
+  puntajeExperiencia   Decimal?      // desglose, si el Departamento lo entrega
+  puntajeCapacitacion  Decimal?
+  desglosado           Boolean
+  fechaUltimoBienio    DateTime?     // ancla del siguiente bienio
+  bieniosReconocidos   Int?
+  excedentePendiente   Decimal?      // arrastre que entra en el primer cierre de período
+  fuente               String        // "Planilla DAS Lota, octubre 2026"
+  creadoPorId          String
+}
+```
+
+Se crea solo desde la carga inicial, en la misma transacción que el `Funcionario` y su `NivelHistorico` de
+motivo `APERTURA`, y queda auditada como `APERTURA`. No es un campo suelto: es un movimiento con fecha, para que
+la bitácora muestre de dónde salió cada punto desde el día uno. Los reportes "a fecha" anteriores a `fecha`
+informan "sin información anterior a la puesta en marcha".
+
 ### Experiencia y bienios
 
 ```prisma
@@ -141,7 +167,7 @@ model NivelHistorico {              // cada cambio de nivel queda registrado
   puntajeAlCambio Decimal
   decretoNumero  String?
   decretoFecha   DateTime?
-  motivo         MotivoNivel        // INGRESO, ASCENSO, HOMOLOGACION, AJUSTE
+  motivo         MotivoNivel        // APERTURA, INGRESO, ASCENSO, HOMOLOGACION, AJUSTE
 }
 ```
 
@@ -284,7 +310,7 @@ model Auditoria {                    // BT 4.9, subcriterio 14
   fecha      DateTime
   entidad    String                  // "Funcionario", "Capacitacion"...
   entidadId  String
-  accion     AccionAuditoria         // CREAR, EDITAR, ELIMINAR, RECONOCER, IMPORTAR
+  accion     AccionAuditoria         // CREAR, EDITAR, ELIMINAR, RECONOCER, IMPORTAR, APERTURA
   antes      Json?                   // valor anterior de los campos cambiados
   despues    Json?                   // valor nuevo
   detalle    String?

@@ -73,7 +73,8 @@ datos. Así se prueba con casos de la ley y se reutiliza para el cálculo "a fec
 
 ## Hosting y despliegue
 
-- **Proveedor**: V2Networks, Cloud Server en datacenter Ascenty SCL01, Santiago (BA 24c exige datos en Chile y proveedor individualizado y autorizado).
+- **Proveedor de producción**: V2Networks, Cloud Server en datacenter Ascenty SCL01, Santiago (BA 24c exige datos en Chile y proveedor individualizado y autorizado por escrito; la adjudicación no reemplaza esa autorización, respuesta 8 del foro).
+- **Demo hasta la adjudicación**: VPS2 (Hostinger, fuera de Chile), permitido por la respuesta 9 del foro con el compromiso de mover los datos a Chile al adjudicar. Subdominio propio, contenedores y base separados del resto del servidor. En la oferta se declara citando la respuesta 9.
 - **Servidor de referencia**: 4 vCPU, 8 GB RAM, 100 GB SSD, Ubuntu LTS. Sobra para 250 funcionarios; el margen es para reportes globales y respaldos.
 - **Dominio**: subdominio propio de Aeroconce (por ejemplo `carrera.aeroconce.cl` para la demo; `lota.carrera-aps.cl` o similar en producción). TLS válido siempre.
 - **Ambientes**: `demo` (el que ve la comisión, congelado desde el envío de credenciales) y `dev`. Producción real se crea al adjudicar, con base limpia.

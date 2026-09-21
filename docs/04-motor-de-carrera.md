@@ -12,6 +12,24 @@ parámetro de `ReglaCarrera` (doc 03); los valores concretos se cargan del regla
 - **La carrera se estructura sobre experiencia y capacitación** (art. 38): el puntaje acumulado de ambas determina el nivel según umbrales que fija el reglamento comunal.
 - **Calificación anual** con listas y efecto en la asignación de mérito. Factores, subfactores y escalas: reglamento comunal.
 
+## 0. Saldo de apertura (doc 18, respuesta 4)
+
+Con la carga inicial cada funcionario trae una `Apertura` (doc 03): fecha de los saldos (la víspera de la puesta en marcha), nivel vigente y
+puntaje vigente, desglosado en experiencia y capacitación si el Departamento lo entrega o total si no. El motor
+la trata como base:
+- `puntajeTotal = apertura.puntajeTotal + lo acumulado desde apertura.fecha`. Con desglose, cada componente suma
+  sobre su parte; sin desglose, el saldo se muestra como "saldo de apertura (sin desglose)".
+- Bienios: el ancla es `fechaUltimoBienio` y `bieniosReconocidos` numera los siguientes; el próximo bienio se
+  proyecta desde ahí. Sin esa fecha se usa la fecha de ingreso. Los bienios registrados con fecha anterior a la
+  apertura se consideran incluidos en el saldo y no se suman de nuevo.
+- Capacitación: los períodos se calculan desde el de la apertura; `excedentePendiente` entra como arrastre en
+  el primer cierre de período. Las actividades anteriores a la apertura no se puntúan de nuevo.
+- Nivel: el `NivelHistorico` vigente nace de la apertura (motivo `APERTURA`, `fechaDesde` de la planilla).
+- Situación a una fecha anterior a `apertura.fecha`: sin información.
+
+En la demo la puesta en marcha ficticia es el 01/01/2025 y las cifras del doc 14 se mantienen: el saldo de
+apertura de cada caso es su situación al 31/12/2024 (ejemplo 1: 105 puntos, nivel 10).
+
 ## 1. Bienios (subcriterio 4)
 
 **Regla:** cada dos años de experiencia reconocida completan un bienio. La experiencia incluye la propia y la reconocida de otros servicios o centros de salud (BT 4.2).

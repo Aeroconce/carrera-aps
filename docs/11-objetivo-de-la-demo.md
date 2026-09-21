@@ -107,7 +107,7 @@ Lo que la estructura del sistema tiene que representar. Los **valores** (puntos 
 
 ## 6. Datos de prueba para la demo
 
-- **Dotación ficticia de ~250 funcionarios** repartidos en 3 o 4 establecimientos con nombres genéricos (CESFAM 1, CESFAM 2, Posta, DAS). Nombres y RUT inventados: ni un dato real.
+- **Dotación ficticia de 320 funcionarios** en los cuatro establecimientos reales de Lota (respuesta 6; doc 08). Nombres y RUT inventados: ni un dato real de personas; nota visible "Datos de demostración; dotación ficticia".
 - Distribución por categoría A a F y por tipo (titular, plazo fijo, reemplazo).
 - Fechas de ingreso variadas para producir entre 0 y 12 bienios; al menos 5 casos con bienio próximo a cumplirse (alerta visible) y 5 con bienio recién reconocido.
 - Capacitaciones cargadas con puntajes y **al menos 10 casos con excedente arrastrado**.
@@ -133,7 +133,7 @@ Enviar además una guía de una página: URL, las tres cuentas, y "dónde ver ca
 
 ## 8. Requisitos operativos de la demo
 
-- **Hosting**: el mismo declarado en la oferta (V2Networks, datacenter Ascenty SCL01, Santiago). Dominio propio con TLS válido.
+- **Hosting**: la demo corre en VPS2 (fuera de Chile), amparada en la respuesta 9 del foro (doc 18), en un subdominio propio con contenedores y base separados del radar. En la oferta se individualiza V2Networks (datacenter Ascenty SCL01, Santiago) como proveedor de producción, con cotización, y se cita la respuesta 9 al declarar el alojamiento de la demo. Dominio propio con TLS válido.
 - Disponible sin interrupción desde el envío de credenciales hasta la adjudicación. Monitoreo de uptime propio.
 - Sin dependencias externas que puedan caerse (CDN, servicios de terceros no contratados).
 - Rendimiento aceptable con 250 registros y reportes globales.
