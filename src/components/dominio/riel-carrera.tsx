@@ -44,7 +44,7 @@ export function RielCarrera({ estado, compacto = false }: { estado: EstadoCarrer
                 />
                 {(esActual || esSiguiente) && !compacto && (
                   // En celular las marcas están muy juntas y los rótulos se pisarían: ahí va una línea aparte
-                  <span className={cn("absolute top-5 hidden whitespace-nowrap text-[0.6875rem] md:block", esActual ? "font-medium text-institucional" : "text-tinta-secundaria")}>
+                  <span className={cn("absolute hidden whitespace-nowrap text-[0.6875rem] md:block", esActual ? "top-5 font-medium text-institucional" : "top-9 text-tinta-secundaria")}>
                     {esActual ? t.actual : t.siguiente} {nivel}
                   </span>
                 )}
@@ -60,7 +60,7 @@ export function RielCarrera({ estado, compacto = false }: { estado: EstadoCarrer
           {siguiente ? ` · ${t.siguiente} ${siguiente.nivel}` : ""}
         </p>
       )}
-      <p className={cn("text-institucional", compacto ? "mt-1 text-sm font-medium" : "text-2xl font-semibold md:mt-5")}>
+      <p className={cn("text-institucional", compacto ? "mt-1 text-sm font-medium" : "text-2xl font-semibold md:mt-9")}>
         {resumen.join(" · ")}
       </p>
     </div>
