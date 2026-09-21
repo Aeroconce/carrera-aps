@@ -39,6 +39,14 @@ export async function crearEstablecimiento(ctx: ContextoAuditoria, institucionId
   });
 }
 
+export async function actualizarEstablecimiento(ctx: ContextoAuditoria, id: string, cambios: { nombre?: string; tipo?: TipoEstablecimiento; activo?: boolean }) {
+  return conAuditoria(ctx, "EDITAR", "Establecimiento", async (tx) => {
+    const antes = await tx.establecimiento.findUniqueOrThrow({ where: { id } });
+    const despues = await tx.establecimiento.update({ where: { id }, data: cambios });
+    return { resultado: despues, entidadId: id, ...diffCampos(antes, despues) };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Funcionarios
 // ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ export const ETIQUETAS = {
     CALIFICACION: "Calificación",
     ALERTAS: "Alertas",
   },
+  tipoEstablecimiento: { CESFAM: "CESFAM", CECOSF: "CECOSF", POSTA: "Posta", SAR: "SAR", SAPU: "SAPU", DIRECCION: "Dirección", OTRO: "Otro" },
   bienioEstado: { enSaldo: "En saldo de apertura", reconocido: "Reconocido", pendiente: "Cumplido, sin reconocer" },
   experiencia: { propia: "Propia", reconocida: "Reconocida" },
   nivelMaximo: "Nivel máximo alcanzado",

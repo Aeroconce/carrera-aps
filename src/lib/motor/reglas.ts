@@ -155,7 +155,8 @@ export class ErrorSinRegla extends Error {
 }
 
 /** Valores por defecto de las reglas opcionales (doc 04): lo que rige si el reglamento no dice nada. */
-const VALORES_POR_DEFECTO: { [T in "PRORRATEO_JORNADA" | "PERIODO" | "ALERTAS" | "ARRASTRE_EXCEDENTE"]: Parametros<T> } = {
+/** Valores por defecto del doc 04 para las reglas que un reglamento puede no fijar (también los muestra Parámetros). */
+export const VALORES_POR_DEFECTO: { [T in "PRORRATEO_JORNADA" | "PERIODO" | "ALERTAS" | "ARRASTRE_EXCEDENTE"]: Parametros<T> } = {
   PRORRATEO_JORNADA: { activo: false, jornadaCompleta: 44 },
   PERIODO: { modo: "anio-calendario" },
   ALERTAS: { diasAvisoBienio: 60, diasBienioSinReconocer: 30, puntosAvisoNivel: 15, diasAvisoCierrePeriodo: 60 },

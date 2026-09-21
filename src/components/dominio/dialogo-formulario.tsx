@@ -39,6 +39,8 @@ export interface CampoFormulario {
   ancho?: "completo" | "medio";
   /** Campo que debe estar marcado (checkbox) para que este se muestre */
   visibleSi?: string;
+  /** Filas visibles de un textarea */
+  filas?: number;
 }
 
 interface Props {
@@ -164,7 +166,7 @@ export function DialogoFormulario({
                       ))}
                     </select>
                   ) : campo.tipo === "textarea" ? (
-                    <Textarea id={campo.nombre} name={campo.nombre} defaultValue={String(campo.valorInicial ?? "")} required={campo.requerido} aria-invalid={invalido} rows={3} />
+                    <Textarea id={campo.nombre} name={campo.nombre} defaultValue={String(campo.valorInicial ?? "")} required={campo.requerido} aria-invalid={invalido} rows={campo.filas ?? 3} className="font-mono text-xs" />
                   ) : campo.tipo === "number" ? (
                     <EntradaNativa
                       id={campo.nombre}

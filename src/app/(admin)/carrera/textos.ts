@@ -1,0 +1,42 @@
+// Textos del módulo Carrera (doc 05 §3, doc 12).
+
+export const textosCarrera = {
+  titulo: "Carrera",
+  intro: "Vista transversal del motor de carrera: lo que espera un acto administrativo y lo que viene.",
+  recalcular: "Recalcular",
+  recalculando: "Recalculando…",
+  recalculado: (activas: number) => `Cálculo actualizado · ${activas} alertas activas`,
+  dotacion: (n: number) => (n === 1 ? "1 funcionario activo" : `${n} funcionarios activos`),
+  pestanas: { bienios: "Bienios por reconocer", ascensos: "Cumplen requisitos de ascenso", proyecciones: "Proyecciones" },
+  bienios: {
+    intro: "Bienios cumplidos sin decreto de reconocimiento. Selecciona varios para aplicar el mismo decreto.",
+    vacio: "No hay bienios pendientes de reconocer.",
+    columnas: { funcionario: "Funcionario", establecimiento: "Establecimiento", numero: "Bienio", cumplido: "Cumplido el", dias: "Días", puntos: "Puntos" },
+    seleccionar: "Seleccionar",
+    seleccionarTodos: "Seleccionar todos",
+    seleccionados: (n: number) => (n === 1 ? "1 seleccionado" : `${n} seleccionados`),
+    reconocer: "Reconocer seleccionados",
+    titulo: "Reconocer bienios con un mismo decreto",
+    descripcion: (n: number) => `Se registrará el decreto en ${n === 1 ? "1 bienio" : `${n} bienios`}. Cada reconocimiento queda auditado por separado.`,
+    decretoNumero: "Número de decreto",
+    decretoFecha: "Fecha del decreto",
+    enviar: "Reconocer",
+    guardando: "Reconociendo…",
+    cancelar: "Cancelar",
+    exito: (n: number) => (n === 1 ? "1 bienio reconocido" : `${n} bienios reconocidos`),
+    omitidos: (n: number) => (n === 1 ? "1 omitido" : `${n} omitidos`),
+    ficha: "Ficha",
+  },
+  ascensos: {
+    intro: "Funcionarios cuyo puntaje alcanza un nivel superior al vigente. El ascenso rige cuando se registra el decreto en la ficha.",
+    vacio: "Nadie cumple requisitos de ascenso pendientes de decreto.",
+    columnas: { funcionario: "Funcionario", establecimiento: "Establecimiento", vigente: "Nivel vigente", desde: "Desde", calculado: "Nivel calculado", puntaje: "Puntaje", umbral: "Exigido" },
+    registrar: "Registrar cambio de nivel",
+  },
+  proyecciones: {
+    intro: "Dotación ordenada por el puntaje que falta para el siguiente nivel, con la fecha estimada y sus supuestos.",
+    vacio: "Sin proyecciones: nadie tiene un nivel siguiente alcanzable con los supuestos actuales.",
+    columnas: { funcionario: "Funcionario", vigente: "Nivel", siguiente: "Siguiente", puntaje: "Puntaje", faltan: "Faltan", fecha: "Fecha estimada", supuestos: "Supuestos" },
+    noAlcanzable: "No se alcanza con los supuestos actuales",
+  },
+} as const;
