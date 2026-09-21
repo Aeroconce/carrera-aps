@@ -37,6 +37,8 @@ export interface BienioCalculado {
 
 export interface ResultadoBienios {
   bienios: BienioCalculado[];
+  /** Bienios en total: los reconocidos según la apertura más los posteriores (para listados y reportes) */
+  totalBienios: number;
   /** Parte de experiencia del saldo de apertura (0 si no hay apertura o no está desglosada) */
   puntajeApertura: Decimal;
   /** Bienios posteriores a la apertura (o todos, sin apertura) */
@@ -147,8 +149,12 @@ export function calcularBienios(funcionario: EntradaBienios, fechaCorte: FechaCi
   const puntajeApertura = apertura?.desglosado && apertura.puntajeExperiencia != null ? puntos(apertura.puntajeExperiencia) : CERO;
   const puntajePosterior = sumarPuntos(bienios.filter((b) => !b.incluidoEnApertura).map((b) => b.puntaje));
 
+  const enApertura = bienios.filter((b) => b.incluidoEnApertura).length;
+  const totalBienios = Math.max(apertura?.bieniosReconocidos ?? 0, enApertura) + (bienios.length - enApertura);
+
   return {
     bienios,
+    totalBienios,
     puntajeApertura,
     puntajePosterior,
     puntajeExperiencia: puntajeApertura.plus(puntajePosterior),

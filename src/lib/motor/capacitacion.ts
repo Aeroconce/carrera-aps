@@ -23,9 +23,13 @@ export interface ActividadCalculada {
   nombre?: string;
   periodo: number;
   horas: number;
+  fechaTermino: FechaCivil;
   aprobado: boolean;
   documentoId: string | null;
+  /** Puntos según la tabla vigente a su fecha de término */
   puntaje: Decimal;
+  /** Parte de esos puntos que entró en el período (los propios llenan el tope en orden de término) */
+  puntajeAplicado: Decimal;
   reglaId: string;
 }
 
@@ -103,8 +107,17 @@ export function calcularCapacitacion(
     const tope = puntos(reglas.vigente("TOPE_CAPACITACION_ANUAL", cierre, categoria).parametros.tope);
     const arrastreRegla = reglas.parametrosODefecto("ARRASTRE_EXCEDENTE", cierre, categoria);
 
-    const calculado = sumarPuntos(actividades.filter((a) => a.periodo === periodo).map((a) => a.puntaje));
+    const delPeriodo = actividades
+      .filter((a) => a.periodo === periodo)
+      .sort((a, b) => (a.fechaTermino < b.fechaTermino ? -1 : a.fechaTermino > b.fechaTermino ? 1 : 0));
+    const calculado = sumarPuntos(delPeriodo.map((a) => a.puntaje));
     const aplicadoPropio = minimo(calculado, tope);
+    // Reparto por actividad, en orden de término, para persistir puntajeAplicado en cada registro
+    let restante = aplicadoPropio;
+    for (const a of delPeriodo) {
+      a.puntajeAplicado = minimo(a.puntaje, restante);
+      restante = restante.minus(a.puntajeAplicado);
+    }
     let disponible = tope.minus(aplicadoPropio);
     let arrastreRecibido = CERO;
     let caducado = CERO;
@@ -179,9 +192,11 @@ export function puntuarActividad(actividad: CapacitacionEntrada, reglas: Conjunt
     nombre: actividad.nombre,
     periodo: actividad.periodo,
     horas: actividad.horas,
+    fechaTermino: actividad.fechaTermino,
     aprobado: actividad.aprobado,
     documentoId: actividad.documentoId ?? null,
     puntaje,
+    puntajeAplicado: CERO,
     reglaId: regla.id,
   };
 }

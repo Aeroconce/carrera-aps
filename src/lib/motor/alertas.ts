@@ -37,7 +37,7 @@ function formatearPuntos(valor: { toDecimalPlaces(n: number): { toString(): stri
 }
 
 export function generarAlertas(estado: EstadoCarrera, reglas: ConjuntoReglas, contexto: ContextoAlertas = {}): AlertaCalculada[] {
-  if (estado.sinInformacion) return [];
+  if (estado.sinInformacion || !estado.activo) return [];
   const { fechaCorte, categoria } = estado;
   const umbrales = reglas.parametrosODefecto("ALERTAS", fechaCorte, categoria);
   const alertas: AlertaCalculada[] = [];

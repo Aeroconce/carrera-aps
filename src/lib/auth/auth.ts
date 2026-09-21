@@ -24,13 +24,10 @@ import { createAccessControl } from "better-auth/plugins/access";
 import { adminAc, defaultStatements } from "better-auth/plugins/admin/access";
 import { registrarAcceso } from "../db/accesos";
 import { prisma } from "../db/prisma";
-import { POLITICA_ACCESO } from "./politica";
+import { POLITICA_ACCESO, ROLES, type Rol } from "./politica";
 
-/** Roles del sistema (BT 2, BT 3.2). El valor se guarda en `user.role`. */
-export const ROLES = ["ADMIN", "SUPERVISION", "FUNCIONARIO"] as const;
-export type Rol = (typeof ROLES)[number];
-
-export { POLITICA_ACCESO };
+export { POLITICA_ACCESO, ROLES };
+export type { Rol };
 
 // Control de acceso del plugin admin: ADMIN tiene todos los permisos administrativos; los otros roles, ninguno.
 const ac = createAccessControl({ ...defaultStatements });

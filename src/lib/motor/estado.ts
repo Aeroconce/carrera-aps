@@ -34,6 +34,8 @@ export interface EstadoCarrera {
   periodoActual: number;
   /** true cuando la fecha de corte es anterior a la apertura: no hay información */
   sinInformacion: boolean;
+  /** false para un funcionario dado de baja: su carrera se conserva, pero no se proyecta ni genera alertas */
+  activo: boolean;
   apertura: { fecha: FechaCivil; puntajeTotal: Decimal; desglosado: boolean } | null;
   bienios: ResultadoBienios;
   capacitacion: ResultadoCapacitacion;
@@ -51,6 +53,7 @@ export function calcularEstadoCarrera(
 ): EstadoCarrera {
   const { categoria } = funcionario;
   const apertura = funcionario.apertura ?? null;
+  const activo = funcionario.estado !== "INACTIVO";
 
   if (apertura && apertura.fecha > fechaCorte) {
     return estadoSinInformacion(funcionario, fechaCorte, reglas);
@@ -85,11 +88,10 @@ export function calcularEstadoCarrera(
     : [{ nivel: apertura.nivel, fechaDesde: apertura.nivelDesde, fechaHasta: null }];
   const nivel = calcularNivel(puntaje.total, categoria, niveles, fechaCorte, reglas);
 
-  const proyeccion = proyectarAscenso(
-    { puntajeTotal: puntaje.total, nivel, proximoBienio: bienios.proximoBienio, capacitacion, categoria, fechaCorte },
-    reglas,
-    opciones,
-  );
+  // Un funcionario dado de baja conserva su historial y su nivel, pero ya no tiene proyección
+  const proyeccion = activo
+    ? proyectarAscenso({ puntajeTotal: puntaje.total, nivel, proximoBienio: bienios.proximoBienio, capacitacion, categoria, fechaCorte }, reglas, opciones)
+    : null;
 
   return {
     funcionarioId: funcionario.id,
@@ -97,6 +99,7 @@ export function calcularEstadoCarrera(
     fechaCorte,
     periodoActual: periodoDe(fechaCorte),
     sinInformacion: false,
+    activo,
     apertura: apertura ? { fecha: apertura.fecha, puntajeTotal: puntos(apertura.puntajeTotal), desglosado: apertura.desglosado } : null,
     bienios,
     capacitacion,
@@ -116,8 +119,9 @@ function estadoSinInformacion(funcionario: FuncionarioEntrada, fechaCorte: Fecha
     fechaCorte,
     periodoActual: periodoDe(fechaCorte),
     sinInformacion: true,
+    activo: funcionario.estado !== "INACTIVO",
     apertura: { fecha: apertura.fecha, puntajeTotal: puntos(apertura.puntajeTotal), desglosado: apertura.desglosado },
-    bienios: { ...calcularBienios({ ...vacio, experiencias: [{ esPropia: true, fechaDesde: fechaCorte, fechaHasta: fechaCorte }] }, fechaCorte, reglas), proximoBienio: null },
+    bienios: { ...calcularBienios({ ...vacio, experiencias: [{ esPropia: true, fechaDesde: fechaCorte, fechaHasta: fechaCorte }] }, fechaCorte, reglas), proximoBienio: null, totalBienios: 0 },
     capacitacion: calcularCapacitacion([], fechaCorte, reglas, funcionario.categoria),
     estudios: calcularEstudios([], funcionario.categoria, fechaCorte, reglas),
     puntaje: { experiencia: CERO, capacitacion: CERO, estudios: CERO, otrosApertura: CERO, saldoAperturaSinDesglose: CERO, total: CERO },

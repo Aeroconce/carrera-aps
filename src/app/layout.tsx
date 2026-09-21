@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans } from "next/font/google";
+import type { ReactNode } from "react";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 // Una sola familia tipográfica (doc 12). next/font la descarga en build y la sirve desde el propio servidor:
@@ -19,10 +22,15 @@ export const metadata: Metadata = {
   description: "Sistema de Gestión de Carrera Funcionaria APS (Ley 19.378)",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// Props explícitas: LayoutProps es un tipo global que Next genera al correr `next dev` o `next typegen` y no
+// existe en un entorno limpio (CI, servidor antes del primer build).
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es-CL" className={`${ibmPlexSans.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <TooltipProvider>{children}</TooltipProvider>
+        <Toaster position="top-right" richColors={false} />
+      </body>
     </html>
   );
 }
