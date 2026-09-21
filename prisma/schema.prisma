@@ -108,6 +108,8 @@ model Funcionario {
   alertas         Alerta[]
   /// Cuenta del portal del funcionario (rol FUNCIONARIO), si existe
   usuario         User?
+  /// Movimiento de apertura (carga inicial), si el funcionario entró con saldo
+  apertura        Apertura?
 
   @@unique([institucionId, rut])
   @@index([institucionId, estado])
@@ -132,6 +134,37 @@ enum TipoContrato {
 enum EstadoFuncionario {
   ACTIVO
   INACTIVO
+}
+
+/// Movimiento de apertura (doc 18, respuesta 4): el saldo con que el funcionario entra al sistema en la carga inicial.
+/// No es un campo suelto: es un movimiento con fecha, auditado como APERTURA, que el motor suma como base antes
+/// de todo lo que acumule después. Anterior a esta fecha no hay información.
+model Apertura {
+  id                  String    @id @default(uuid(7))
+  funcionarioId       String    @unique
+  /// Puesta en marcha: desde aquí el motor acumula hacia adelante
+  fecha               DateTime  @db.Date
+  /// Grado (nivel) vigente en la planilla y desde cuándo rige
+  nivel               Int
+  nivelDesde          DateTime  @db.Date
+  puntajeTotal        Decimal   @db.Decimal(8, 2)
+  /// Desglose del puntaje, si el Departamento lo entrega
+  puntajeExperiencia  Decimal?  @db.Decimal(8, 2)
+  puntajeCapacitacion Decimal?  @db.Decimal(8, 2)
+  desglosado          Boolean   @default(false)
+  /// Ancla para proyectar el siguiente bienio; sin ella se usa la fecha de ingreso
+  fechaUltimoBienio   DateTime? @db.Date
+  bieniosReconocidos  Int?
+  /// Excedente de capacitación pendiente del período anterior; entra como arrastre en el primer cierre
+  excedentePendiente  Decimal?  @db.Decimal(8, 2)
+  /// Origen del dato, p. ej. "Planilla DAS Lota, octubre 2026"
+  fuente              String
+  creadoPorId         String
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  funcionario Funcionario @relation(fields: [funcionarioId], references: [id])
+  creadoPor   User        @relation(fields: [creadoPorId], references: [id])
 }
 
 /// Período de experiencia que cuenta para bienios: propio de la institución o reconocido de otro servicio de salud (BT 4.2).
@@ -296,6 +329,7 @@ model NivelHistorico {
 }
 
 enum MotivoNivel {
+  APERTURA
   INGRESO
   ASCENSO
   HOMOLOGACION
@@ -582,6 +616,7 @@ model User {
   documentos       Documento[]
   reglasCreadas    ReglaCarrera[]
   alertasAtendidas Alerta[]
+  aperturas        Apertura[]
 
   @@index([institucionId])
   @@map("user")
@@ -693,6 +728,7 @@ model Auditoria {
 
 enum AccionAuditoria {
   CREAR
+  APERTURA
   EDITAR
   ELIMINAR
   RECONOCER
