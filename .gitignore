@@ -46,6 +46,7 @@ next-env.d.ts
 # Playwright: informes y artefactos (pueden contener valores de formularios)
 /test-results/
 /capturas/
+/respaldos/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

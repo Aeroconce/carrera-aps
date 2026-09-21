@@ -92,11 +92,13 @@ export default async function MiCarreraPage() {
               <dt className="text-xs text-tinta-secundaria">{t.resumen.estimado}</dt>
               <dd className="font-medium">{estado.proyeccion?.fechaEstimada ? formatearMesAnio(estado.proyeccion.fechaEstimada) : t.resumen.sinProyeccion}</dd>
             </div>
-            <div className="col-span-2 text-xs text-tinta-secundaria">
-              {t.resumen.desglose(formatearPuntos(estado.puntaje.experiencia), formatearPuntos(estado.puntaje.capacitacion), formatearPuntos(estado.puntaje.estudios))}
-              {estado.proyeccion ? ` · ${t.resumen.supuestos}: ${estado.proyeccion.descripcion}` : ""}
-            </div>
           </dl>
+        )}
+        {!estado.sinInformacion && (
+          <p className="mt-3 text-xs text-tinta-secundaria">
+            {t.resumen.desglose(formatearPuntos(estado.puntaje.experiencia), formatearPuntos(estado.puntaje.capacitacion), formatearPuntos(estado.puntaje.estudios))}
+            {estado.proyeccion ? ` · ${t.resumen.supuestos}: ${estado.proyeccion.descripcion}` : ""}
+          </p>
         )}
       </section>
 

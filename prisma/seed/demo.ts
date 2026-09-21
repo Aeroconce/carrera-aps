@@ -4,9 +4,11 @@
 // Requiere `pnpm seed:bootstrap` (ADMIN e institución). Ejecutar: pnpm seed:demo
 
 import "dotenv/config";
+import { auth } from "../../src/lib/auth/auth";
 import { conAuditoria } from "../../src/lib/db/auditado";
 import { prisma } from "../../src/lib/db/prisma";
 import { crearRegla } from "../../src/lib/db/reglas";
+import { registrarRespaldo } from "../../src/lib/db/respaldos";
 import {
   actualizarInstitucion,
   crearEstablecimiento,
@@ -91,6 +93,53 @@ async function main(): Promise<void> {
       await registrarCambioNivel(ctx, funcionario.id, { ...n, motivo: "ASCENSO" });
     }
     console.log(`Caso ${caso.clave}: ${caso.funcionario.nombres} ${caso.funcionario.apellidos} creado`);
+  }
+
+  // 5. Cuentas de demostración (doc 08, doc 11): SUPERVISION y FUNCIONARIO (asociado a María, caso 1).
+  // Las contraseñas vienen de .env (scripts/generar-contrasenas-demo.ts); nunca se imprimen.
+  const maria = await prisma.funcionario.findUnique({ where: { institucionId_rut: { institucionId: institucion.id, rut: CASOS_DEMO[0]!.funcionario.rut } } });
+  const cuentas = [
+    { email: process.env.SEED_SUPERVISION_EMAIL ?? "supervision.demo@carrera-aps.local", password: process.env.SEED_SUPERVISION_PASSWORD, name: "Supervisión (demo)", role: "SUPERVISION", funcionarioId: null },
+    { email: process.env.SEED_FUNCIONARIO_EMAIL ?? "funcionario.demo@carrera-aps.local", password: process.env.SEED_FUNCIONARIO_PASSWORD, name: maria ? `${maria.nombres} ${maria.apellidos}` : "Funcionario (demo)", role: "FUNCIONARIO", funcionarioId: maria?.id ?? null },
+  ];
+  for (const cuenta of cuentas) {
+    if (!cuenta.password) {
+      console.log(`Cuenta ${cuenta.email}: sin contraseña en .env, se omite (ejecuta scripts/generar-contrasenas-demo.ts)`);
+      continue;
+    }
+    const existente = await prisma.user.findUnique({ where: { email: cuenta.email } });
+    if (!existente) {
+      await auth.api.createUser({
+        body: { email: cuenta.email, password: cuenta.password, name: cuenta.name, role: cuenta.role as "SUPERVISION" | "FUNCIONARIO", data: { institucionId: institucion.id, funcionarioId: cuenta.funcionarioId, debeCambiarPassword: false } },
+      });
+      console.log(`Cuenta ${cuenta.email}: creada (${cuenta.role})`);
+    } else {
+      const contexto = await auth.$context;
+      await contexto.internalAdapter.updatePassword(existente.id, await contexto.password.hash(cuenta.password));
+      await prisma.user.update({ where: { id: existente.id }, data: { role: cuenta.role, institucionId: institucion.id, funcionarioId: cuenta.funcionarioId, debeCambiarPassword: false, banned: false, name: cuenta.name } });
+      console.log(`Cuenta ${cuenta.email}: actualizada`);
+    }
+  }
+
+  // 6. Evidencia de respaldos (doc 08): 30 respaldos diarios de la base, el último verificado por restauración.
+  if ((await prisma.respaldo.count()) === 0) {
+    const { createHash } = await import("node:crypto");
+    const hoy = new Date();
+    for (let i = 30; i >= 1; i--) {
+      const fecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - i, 3, 0, 0);
+      const marca = `${fecha.getFullYear()}${String(fecha.getMonth() + 1).padStart(2, "0")}${String(fecha.getDate()).padStart(2, "0")}`;
+      await registrarRespaldo({
+        fecha,
+        tipo: "bd",
+        destino: `/data/respaldos/bd-${marca}-030000.sql.gz.age`,
+        tamano: 2_400_000 + ((i * 7919) % 300_000),
+        hash: createHash("sha256").update(`demo-respaldo-${marca}`).digest("hex"),
+        resultado: "OK",
+        duracionSeg: 4 + (i % 5),
+        verificadoEl: i === 1 ? new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() - 1, 9, 30, 0) : null,
+      });
+    }
+    console.log("Respaldos: 30 registros de demostración");
   }
 }
 

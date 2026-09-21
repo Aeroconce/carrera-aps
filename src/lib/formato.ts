@@ -54,3 +54,10 @@ export { formatearRut };
 export function nombreCompleto(f: { nombres: string; apellidos: string }): string {
   return `${f.nombres} ${f.apellidos}`;
 }
+
+/** Tamaño de archivo legible: "2,4 MB", "512 KB". */
+export function formatearTamano(bytes: number): string {
+  if (bytes >= 1_048_576) return `${(bytes / 1_048_576).toFixed(1).replace(".", ",")} MB`;
+  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${bytes} B`;
+}
