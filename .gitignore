@@ -47,6 +47,7 @@ next-env.d.ts
 /test-results/
 /capturas/
 /respaldos/
+/documentos/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

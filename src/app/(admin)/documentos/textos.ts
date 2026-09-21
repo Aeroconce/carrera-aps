@@ -1,0 +1,41 @@
+// Textos del módulo Documentos (BT 4.8, doc 05 §7, doc 12).
+
+export const textosDocumentos = {
+  titulo: "Documentos",
+  intro: "Repositorio de respaldos por funcionario y por tipo: certificados, títulos, resoluciones, decretos y actas. Los documentos institucionales (sin funcionario) van aparte. Se guardan fuera del sitio y se descargan solo con sesión.",
+  subir: "Subir documento",
+  total: (n: number) => (n === 1 ? "1 documento" : `${n} documentos`),
+  filtros: { buscar: "Funcionario", tipo: "Tipo", todos: "Todos", institucionales: "Solo institucionales", aplicar: "Filtrar", limpiar: "Limpiar" },
+  columnas: { nombre: "Nombre", tipo: "Tipo", funcionario: "Funcionario", tamano: "Tamaño", subidoPor: "Subido por", fecha: "Fecha", descargar: "Descargar" },
+  institucional: "Institucional",
+  vacio: "No hay documentos que coincidan con los filtros.",
+  dialogo: {
+    titulo: "Subir documento",
+    descripcion: "PDF, JPG o PNG de hasta 10 MB. Si respalda un bienio, una capacitación o un estudio, vincúlalo para que la alerta de documento faltante se resuelva.",
+    archivo: "Archivo",
+    tipo: "Tipo de documento",
+    nombre: "Nombre visible",
+    nombreAyuda: "Si se deja vacío, el nombre del archivo.",
+    funcionario: "Funcionario",
+    sinFuncionario: "Documento institucional (sin funcionario)",
+    vincular: "Respalda a",
+    sinVinculo: "Sin vínculo",
+    enviar: "Subir",
+    subiendo: "Subiendo…",
+    exito: "Documento subido",
+    cancelar: "Cancelar",
+  },
+  tipos: {
+    CERTIFICADO_CAPACITACION: "Certificado de capacitación",
+    TITULO: "Título",
+    RESOLUCION: "Resolución",
+    DECRETO: "Decreto",
+    ACTA: "Acta",
+    CONTRATO: "Contrato",
+    OTRO: "Otro",
+  } as Record<string, string>,
+  ficha: {
+    vacio: "Sin documentos adjuntos.",
+    vinculos: { capacitacion: "Capacitación", bienio: "Bienio", estudio: "Estudio", nivel: "Nivel", experiencia: "Experiencia" },
+  },
+} as const;

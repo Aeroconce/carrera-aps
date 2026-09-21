@@ -2,7 +2,7 @@
 // nada se importa) y planilla válida (vista previa, confirmación, apertura auditada). Borra lo que creó.
 
 import "dotenv/config";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";

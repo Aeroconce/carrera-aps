@@ -28,6 +28,7 @@ import {
   SeccionNivel,
   Vacio,
 } from "./secciones";
+import { SeccionDocumentos } from "./seccion-documentos";
 import { TabsFicha } from "./tabs-ficha";
 import { textosFuncionarios } from "../textos";
 
@@ -132,7 +133,7 @@ export default async function FichaFuncionarioPage({ params, searchParams }: { p
           { valor: "estudios", etiqueta: t.pestanas.estudios, contenido: <SeccionEstudios carrera={carrera} acciones={puedeEditar && <DialogoEstudio carrera={carrera} />} /> },
           { valor: "nivel", etiqueta: t.pestanas.nivel, contenido: <SeccionNivel carrera={carrera} acciones={puedeEditar && <DialogoCambioNivel carrera={carrera} />} /> },
           { valor: "calificaciones", etiqueta: t.pestanas.calificaciones, contenido: <Vacio texto={t.proximamente} /> },
-          { valor: "documentos", etiqueta: t.pestanas.documentos, contenido: <Vacio texto={t.proximamente} /> },
+          { valor: "documentos", etiqueta: t.pestanas.documentos, contenido: <SeccionDocumentos carrera={carrera} puedeEditar={puedeEditar} /> },
           { valor: "historial", etiqueta: t.pestanas.historial, contenido: <SeccionHistorial entradas={historial} /> },
           { valor: "alertas", etiqueta: t.pestanas.alertas, contenido: <SeccionAlertas alertas={alertas} /> },
         ]}
