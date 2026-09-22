@@ -17,7 +17,7 @@ function marcaDeTiempo(fecha: Date): string {
   return `${fecha.getFullYear()}${p(fecha.getMonth() + 1)}${p(fecha.getDate())}-${p(fecha.getHours())}${p(fecha.getMinutes())}${p(fecha.getSeconds())}`;
 }
 
-interface Volcado {
+export interface Volcado {
   contenido: Buffer;
   origen: string;
 }
@@ -41,7 +41,7 @@ function ejecutar(comando: string, args: string[], entrada?: Buffer): Promise<{ 
 }
 
 /** Volcado SQL de la base: pg_dump local o, si no existe, el del contenedor `db` de Compose. */
-async function volcarBase(): Promise<Volcado> {
+export async function volcarBase(): Promise<Volcado> {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL no está definida.");
   const local = await ejecutar("pg_dump", ["--dbname", url, "--no-owner", "--no-privileges"]);
