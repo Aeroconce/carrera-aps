@@ -5,6 +5,7 @@ export const textosDocumentos = {
   intro: "Repositorio de respaldos por funcionario y por tipo: certificados, títulos, resoluciones, decretos y actas. Los documentos institucionales (sin funcionario) van aparte. Se guardan fuera del sitio y se descargan solo con sesión.",
   subir: "Subir documento",
   total: (n: number) => (n === 1 ? "1 documento" : `${n} documentos`),
+  mostrando: (n: number, total: number) => `${total} documentos · se muestran los ${n} más recientes; acota con los filtros`,
   filtros: { buscar: "Funcionario", tipo: "Tipo", todos: "Todos", institucionales: "Solo institucionales", aplicar: "Filtrar", limpiar: "Limpiar" },
   columnas: { nombre: "Nombre", tipo: "Tipo", funcionario: "Funcionario", tamano: "Tamaño", subidoPor: "Subido por", fecha: "Fecha", descargar: "Descargar" },
   institucional: "Institucional",

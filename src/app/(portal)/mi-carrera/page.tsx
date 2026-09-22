@@ -1,3 +1,4 @@
+import { textosDocumentos } from "@/app/(admin)/documentos/textos";
 import type { Metadata } from "next";
 import { BotonCerrarSesion } from "@/components/dominio/boton-cerrar-sesion";
 import { RielCarrera } from "@/components/dominio/riel-carrera";
@@ -167,7 +168,7 @@ export default async function MiCarreraPage() {
                     <p className="font-medium">{ETIQUETAS.tipoEstudio[e.tipo]} · {e.nombre}</p>
                     <p className="text-xs text-tinta-secundaria">{e.institucion} · {e.reconocidoEl ? t.estudios.reconocido(formatearFecha(e.reconocidoEl)) : t.estudios.sinReconocer}</p>
                   </div>
-                  <span className="whitespace-nowrap text-tinta-secundaria">{calc?.soloBeneficio ? t.estudios.beneficio : calc ? t.estudios.puntos(formatearPuntos(calc.puntaje)) : ""}</span>
+                  <span className="whitespace-nowrap text-tinta-secundaria">{calc?.incluidoEnApertura ? t.estudios.enApertura : calc?.soloBeneficio ? t.estudios.beneficio : calc ? t.estudios.puntos(formatearPuntos(calc.puntaje)) : ""}</span>
                 </li>
               );
             })}
@@ -209,7 +210,7 @@ export default async function MiCarreraPage() {
                 <div>
                   <p className="font-medium">{d.nombre}</p>
                   <p className="text-xs text-tinta-secundaria">
-                    <Badge variant="outline">{d.tipo}</Badge> {formatearFecha(d.createdAt)}
+                    <Badge variant="outline">{textosDocumentos.tipos[d.tipo] ?? d.tipo}</Badge> {formatearFecha(d.createdAt)}
                   </p>
                 </div>
                 <a href={`/documentos/${d.id}/descargar`} className="text-institucional underline">{t.documentos.descargar}</a>

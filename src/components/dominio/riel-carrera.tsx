@@ -25,8 +25,12 @@ export function RielCarrera({ estado, compacto = false }: { estado: EstadoCarrer
   return (
     <div className="flex flex-col gap-2" aria-label="Riel de carrera">
       <div className="flex items-center gap-1 text-xs text-tinta-secundaria">
-        <span className="shrink-0">{t.nivelIngreso} {estructura.nivelIngreso}</span>
-        <ol className="flex flex-1 items-center justify-between px-1" role="list">
+        {/* En celular los rótulos completos no caben junto a las 15 marcas: versión corta hasta sm */}
+        <span className="shrink-0">
+          <span className="sm:hidden">{t.nivelIngresoCorto}</span>
+          <span className="hidden sm:inline">{t.nivelIngreso}</span> {estructura.nivelIngreso}
+        </span>
+        <ol className="flex min-w-0 flex-1 items-center justify-between px-1" role="list">
           {progresion.map((nivel) => {
             const esActual = nivel === actual;
             const esSiguiente = siguiente?.nivel === nivel;
@@ -52,7 +56,10 @@ export function RielCarrera({ estado, compacto = false }: { estado: EstadoCarrer
             );
           })}
         </ol>
-        <span className="shrink-0">{t.nivelMaximo} {estructura.nivelMaximo}</span>
+        <span className="shrink-0">
+          <span className="sm:hidden">{t.nivelMaximoCorto}</span>
+          <span className="hidden sm:inline">{t.nivelMaximo}</span> {estructura.nivelMaximo}
+        </span>
       </div>
       {!compacto && (
         <p className="text-xs text-tinta-secundaria md:hidden">

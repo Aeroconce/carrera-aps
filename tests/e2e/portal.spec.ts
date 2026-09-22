@@ -70,8 +70,12 @@ test("supervisión lee sin editar", async ({ page }) => {
   await page.goto(`/funcionarios/${maria.id}`);
   await expect(page.getByRole("heading", { name: "María Ignacia Pérez Soto" })).toBeVisible({ timeout: 120_000 });
   await page.goto("/funcionarios");
-  await page.getByRole("link", { name: "María Ignacia Pérez Soto" }).click();
-  await page.waitForURL(/\/funcionarios\/[0-9a-f-]+$/, { timeout: 45_000 });
+  // La lista trae 315 tarjetas: si el clic llega antes de la hidratación, el router lo pierde. Se reintenta.
+  await expect(async () => {
+    if (/\/funcionarios\/[0-9a-f-]+$/.test(page.url())) return;
+    await page.getByRole("link", { name: "María Ignacia Pérez Soto" }).click({ timeout: 10_000 });
+    await page.waitForURL(/\/funcionarios\/[0-9a-f-]+$/, { timeout: 10_000 });
+  }).toPass({ timeout: 90_000 });
   await expect(page.getByRole("heading", { name: "María Ignacia Pérez Soto" })).toBeVisible({ timeout: 45_000 });
   await expect(page.getByRole("button", { name: "Editar datos" })).toHaveCount(0);
   await page.goto("/parametros");

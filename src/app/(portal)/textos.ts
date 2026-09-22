@@ -49,6 +49,7 @@ export const textosPortal = {
     reconocido: (fecha: string) => `Reconocido el ${fecha}`,
     sinReconocer: "Pendiente de reconocimiento",
     beneficio: "Beneficio informativo",
+    enApertura: "En saldo de apertura",
     puntos: (p: string) => `${p} puntos`,
     vacio: "Sin estudios registrados.",
   },

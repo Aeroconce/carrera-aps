@@ -45,7 +45,9 @@ export const textosFuncionarios = {
     },
     riel: {
       nivelIngreso: "Nivel de ingreso",
+      nivelIngresoCorto: "Ingreso",
       nivelMaximo: "Nivel máximo",
+      nivelMaximoCorto: "Máximo",
       actual: "actual",
       nivelActual: "Nivel actual",
       siguiente: "siguiente",

@@ -33,8 +33,9 @@ export default async function DocumentosPage({ searchParams }: { searchParams: P
     ...(institucionales ? { funcionarioId: null } : {}),
     ...(q ? { funcionario: { OR: [{ nombres: { contains: q, mode: "insensitive" } }, { apellidos: { contains: q, mode: "insensitive" } }, ...(rut ? [{ rut: { startsWith: rut } }] : [])] } } : {}),
   };
-  const [documentos, funcionarios] = await Promise.all([
+  const [documentos, total, funcionarios] = await Promise.all([
     prisma.documento.findMany({ where, include: { funcionario: { select: { id: true, nombres: true, apellidos: true, rut: true } }, subidoPor: { select: { name: true } } }, orderBy: { createdAt: "desc" }, take: 300 }),
+    prisma.documento.count({ where }),
     puedeEditar ? prisma.funcionario.findMany({ where: { institucionId }, orderBy: [{ apellidos: "asc" }, { nombres: "asc" }], select: { id: true, nombres: true, apellidos: true, rut: true } }) : [],
   ]);
 
@@ -71,7 +72,7 @@ export default async function DocumentosPage({ searchParams }: { searchParams: P
           <Link href="/documentos" className="inline-flex h-10 items-center px-3 text-sm">{t.filtros.limpiar}</Link>
         </div>
       </form>
-      <p className="text-sm text-tinta-secundaria">{t.total(documentos.length)}</p>
+      <p className="text-sm text-tinta-secundaria">{documentos.length < total ? t.mostrando(documentos.length, total) : t.total(total)}</p>
 
       {documentos.length === 0 ? (
         <p className="rounded-lg border border-dashed border-linea p-8 text-center text-sm text-tinta-secundaria">{t.vacio}</p>

@@ -131,7 +131,7 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
             <p className="text-sm text-tinta-secundaria">{t.resumen(proceso._count.calificaciones, totalActivos)}</p>
           </div>
           {puedeEditar && proceso.estado !== "ABIERTO" && <p className="rounded-lg border border-linea bg-superficie px-3 py-2 text-sm text-tinta-secundaria">{t.soloAbierto}</p>}
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 lg:grid-cols-2">
             <PanelComision procesoId={proceso.id} abierto={proceso.estado === "ABIERTO"} integrantes={proceso.comision} puedeEditar={puedeEditar} />
             <PanelFactores procesoId={proceso.id} abierto={proceso.estado === "ABIERTO"} factores={factores} puedeEditar={puedeEditar} origen={origen ? { id: origen.id, nombre: origen.nombre } : null} />
           </div>
