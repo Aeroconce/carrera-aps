@@ -19,7 +19,7 @@ La demo corre en VPS2 (Hostinger, fuera de Chile), amparada en la respuesta 9 de
   `deploy/nginx-demo-carrera.conf` en `sites-available` + `sites-enabled` y `nginx -t && systemctl reload nginx`;
   `deploy/desplegar-vps2.sh` (construye la imagen, migra, siembra si la base está vacía y levanta `web` y `worker`
   con el perfil `demo` de Compose); `certbot --nginx -d demo-carrera.aeroconce.cl` cuando el DNS resuelva.
-  Actualizar: `git pull && deploy/desplegar-vps2.sh`. `web` escucha en 127.0.0.1:3050; `worker` sincroniza
+  Actualizar: `git pull && deploy/desplegar-vps2.sh`. `web` escucha en 127.0.0.1:3060; `worker` sincroniza
   alertas a las 02:00 y respalda a las 03:00 (`scripts/worker.sh`).
 - Al adjudicar, la producción se levanta en V2Networks (secciones siguientes) con base limpia y el reglamento
   real; la demo se apaga y sus datos ficticios se borran.
