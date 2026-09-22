@@ -22,7 +22,7 @@ done
 $DC run --rm web pnpm db:migrate
 
 # Arranque (ADMIN e institución) y demo solo si la base está vacía: nunca durante la evaluación
-FUNCIONARIOS=$($DC run --rm -T db psql -U app -d carrera -tAc 'SELECT count(*) FROM "Funcionario"' 2>/dev/null || echo 0)
+FUNCIONARIOS=$($DC exec -T db psql -U app -d carrera -tAc 'SELECT count(*) FROM "Funcionario"' 2>/dev/null || echo 0)
 if [ "${FUNCIONARIOS//[[:space:]]/}" = "0" ]; then
   $DC run --rm web pnpm seed:bootstrap
   $DC run --rm web pnpm seed:demo

@@ -15,6 +15,12 @@ La demo corre en VPS2 (Hostinger, fuera de Chile), amparada en la respuesta 9 de
 - Subdominio dedicado (`demo-carrera.aeroconce.cl`) servido por el nginx ya existente en VPS2 como proxy inverso
   al contenedor `web`, con certificado de certbot. Caddy no se usa en VPS2 porque nginx ocupa 80 y 443.
 - `.env` propio con `DOMINIO`, `DB_PASSWORD`, `BETTER_AUTH_SECRET` y `BETTER_AUTH_URL` del subdominio.
+- Pasos (como root, repositorio en `/srv/carrera-aps`): registro DNS `A demo-carrera → 179.199.139.16`;
+  `deploy/nginx-demo-carrera.conf` en `sites-available` + `sites-enabled` y `nginx -t && systemctl reload nginx`;
+  `deploy/desplegar-vps2.sh` (construye la imagen, migra, siembra si la base está vacía y levanta `web` y `worker`
+  con el perfil `demo` de Compose); `certbot --nginx -d demo-carrera.aeroconce.cl` cuando el DNS resuelva.
+  Actualizar: `git pull && deploy/desplegar-vps2.sh`. `web` escucha en 127.0.0.1:3050; `worker` sincroniza
+  alertas a las 02:00 y respalda a las 03:00 (`scripts/worker.sh`).
 - Al adjudicar, la producción se levanta en V2Networks (secciones siguientes) con base limpia y el reglamento
   real; la demo se apaga y sus datos ficticios se borran.
 
