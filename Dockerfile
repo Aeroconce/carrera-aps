@@ -23,7 +23,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM deps AS build
 COPY . .
-# El cliente de Prisma se genera en src/generated/prisma (fuera de git); DATABASE_URL no hace falta para generar
+# Valores ficticios SOLO para compilar: el cliente de Prisma y Better Auth se instancian al importar los módulos,
+# pero no se conectan ni firman nada durante `next build`. En ejecución mandan las variables de Compose.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build BETTER_AUTH_SECRET=solo-para-compilar-no-usar-en-ejecucion BETTER_AUTH_URL=http://localhost:3000
 RUN pnpm db:generate && pnpm build
 
 FROM base AS runtime
