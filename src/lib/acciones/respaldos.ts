@@ -7,6 +7,7 @@ import { exigirSesion } from "@/lib/auth/sesion";
 import { marcarVerificado } from "@/lib/db/respaldos";
 import { ejecutarRespaldoBd } from "@/lib/respaldos/ejecutar";
 import { errorInterno, type RespuestaAccion } from "./tipos";
+import { parsearChileno } from "@/lib/fechas/civil";
 
 export interface RespaldoResumen {
   id: string;
@@ -32,10 +33,19 @@ export async function ejecutarRespaldoAction(): Promise<RespuestaAccion<Respaldo
   }
 }
 
+function fechaDeTexto(texto: string): Date {
+  try {
+    return new Date(`${parsearChileno(texto)}T12:00:00.000Z`);
+  } catch {
+    return new Date(texto);
+  }
+}
+
 export async function marcarVerificadoAction(id: string, fd: FormData): Promise<RespuestaAccion<{ id: string }>> {
   const sesion = await exigirSesion({ roles: ["ADMIN"] });
   const nota = fd.get("fecha");
-  const fecha = typeof nota === "string" && nota.trim() ? new Date(nota) : new Date();
+  // Acepta dd/mm/aaaa (formulario) o AAAA-MM-DD; vacío = ahora
+  const fecha = typeof nota === "string" && nota.trim() ? fechaDeTexto(nota.trim()) : new Date();
   if (Number.isNaN(fecha.getTime())) {
     return { ok: false, error: { codigo: "VALIDACION", mensaje: "Revisa los campos marcados.", campos: { fecha: ["Escribe una fecha válida."] } } };
   }

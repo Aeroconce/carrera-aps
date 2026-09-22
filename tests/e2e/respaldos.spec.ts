@@ -37,7 +37,8 @@ test("historial, política y respaldo a demanda", async ({ page }, testInfo) => 
   await expect(page.getByText(/pg_dump diario a las 03:00/)).toBeVisible();
   // El seed deja 30 respaldos diarios, el último verificado por restauración
   await expect(page.getByText("Último respaldo verificado por restauración")).toBeVisible();
-  await expect(page.getByRole("row").filter({ hasText: "OK" }).first()).toBeVisible();
+  // En celular el historial son tarjetas; en escritorio, filas
+  await expect(page.locator("tr, li").filter({ hasText: "OK" }).filter({ visible: true }).first()).toBeVisible();
   if (capturas) await page.screenshot({ path: `capturas/respaldos-${testInfo.project.name}.png`, fullPage: true });
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
   expect(axe.violations, JSON.stringify(axe.violations, null, 2)).toEqual([]);
@@ -51,7 +52,7 @@ test("historial, política y respaldo a demanda", async ({ page }, testInfo) => 
   expect(creado?.resultado).toBe("OK");
   expect(Number(creado?.tamano)).toBeGreaterThan(1000);
   expect(creado?.hash).toMatch(/^[0-9a-f]{64}$/);
-  await expect(page.getByRole("row").filter({ hasText: creado!.hash.slice(0, 12) })).toBeVisible();
+  await expect(page.locator("tr, li").filter({ hasText: creado!.hash.slice(0, 12) }).filter({ visible: true }).first()).toBeVisible();
   // Queda auditado
   const auditoria = await prisma.auditoria.findFirst({ where: { entidad: "Respaldo", entidadId: creado!.id } });
   expect(auditoria?.accion).toBe("CREAR");
