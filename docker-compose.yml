@@ -1,8 +1,16 @@
 # Carrera APS — infraestructura (docs/10-stack-y-librerias.md y docs/17-runbook-y-entrega.md).
-# Fase actual: solo `db`. Los servicios web, worker, caddy y backup se agregan al preparar el despliegue (doc 09, Fase 1).
 #
-# Desarrollo:  docker compose up -d db   ·  estado: docker compose ps   ·  logs: docker compose logs -f db
-# Base limpia (borra los datos):  docker compose down -v
+# Desarrollo: solo la base.   docker compose up -d db   ·  estado: docker compose ps   ·  logs: docker compose logs -f db
+# Base limpia (borra datos):  docker compose down -v
+#
+# Demo en VPS2 (proyecto propio, puertos solo en 127.0.0.1; nginx del servidor hace de proxy con TLS):
+#   docker compose -p carrera-demo --profile demo build
+#   docker compose -p carrera-demo --profile demo up -d db
+#   docker compose -p carrera-demo --profile demo run --rm web pnpm db:migrate
+#   docker compose -p carrera-demo --profile demo run --rm web pnpm seed:bootstrap
+#   docker compose -p carrera-demo --profile demo run --rm web pnpm seed:demo
+#   docker compose -p carrera-demo --profile demo up -d
+# `web` escucha en 127.0.0.1:${PUERTO_WEB:-3050}; `worker` sincroniza alertas (02:00) y respalda (03:00).
 
 services:
   db:
@@ -16,7 +24,7 @@ services:
     ports:
       # Publicado solo en la propia máquina. 5436 evita chocar con el Postgres local (5432)
       # y con los contenedores de otros proyectos (5433 a 5435, 55432).
-      - "127.0.0.1:5436:5432"
+      - "127.0.0.1:${PUERTO_DB:-5436}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -26,5 +34,46 @@ services:
       retries: 5
       start_period: 10s
 
+  web:
+    profiles: ["demo"]
+    build: .
+    image: carrera-aps:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://app:${DB_PASSWORD}@db:5432/carrera
+      INTERNAL_BASE_URL: http://127.0.0.1:3000
+      DOCUMENTOS_DIR: /data/documentos
+      RESPALDOS_DIR: /data/respaldos
+      LOG_DIR: /data/logs
+      HOSTNAME: 0.0.0.0
+    ports:
+      - "127.0.0.1:${PUERTO_WEB:-3050}:3000"
+    volumes:
+      - documentos:/data/documentos
+      - respaldos:/data/respaldos
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    profiles: ["demo"]
+    image: carrera-aps:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://app:${DB_PASSWORD}@db:5432/carrera
+      DOCUMENTOS_DIR: /data/documentos
+      RESPALDOS_DIR: /data/respaldos
+    volumes:
+      - documentos:/data/documentos
+      - respaldos:/data/respaldos
+    command: ["sh", "scripts/worker.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
+  documentos:
+  respaldos:
