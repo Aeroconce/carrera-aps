@@ -69,9 +69,9 @@ services:
       - documentos:/data/documentos
       - respaldos:/data/respaldos
     command: ["sh", "scripts/worker.sh"]
-    # El worker no sirve HTTP: su salud es que el bucle siga vivo
+    # El worker no sirve HTTP: su salud es que el bucle siga vivo (latido renovado cada minuto por worker.sh)
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -f scripts/worker.sh >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "find /tmp/worker-latido -mmin -3 | grep -q . || exit 1"]
       interval: 60s
       timeout: 5s
       retries: 3

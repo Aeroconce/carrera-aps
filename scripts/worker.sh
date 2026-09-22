@@ -6,6 +6,9 @@
 set -eu
 cd /app
 echo "worker: arranque $(date)"
+# Latido para el healthcheck de Compose (la imagen no trae procps): se renueva en cada vuelta del bucle
+LATIDO=/tmp/worker-latido
+touch "$LATIDO"
 pnpm alertas:sincronizar || echo "worker: sincronización inicial falló"
 
 ultimo_alertas=""
@@ -23,5 +26,6 @@ while true; do
     # Retención local: 30 días
     find /data/respaldos -type f -mtime +30 -delete 2>/dev/null || true
   fi
+  touch "$LATIDO"
   sleep 60
 done

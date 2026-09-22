@@ -25,6 +25,11 @@ La demo corre en VPS2 (Hostinger, fuera de Chile), amparada en la respuesta 9 de
 - Contraseñas de las cuentas de demostración: `scripts/generar-contrasenas-demo.ts` las genera en `.env` y
   `scripts/aplicar-contrasenas-demo.ts` aplica los valores de `.env` a las cuentas ya creadas (en la demo:
   `docker compose -p carrera-demo --profile demo run --rm web pnpm exec tsx scripts/aplicar-contrasenas-demo.ts`).
+- Salud: `web` expone `/api/health` (Compose lo usa como healthcheck); `worker` renueva un latido en `/tmp/worker-latido`
+  cada minuto y su healthcheck comprueba que tenga menos de 3 minutos. `deploy/salud-demo.sh` corre por cron cada
+  5 minutos en VPS2 (`/etc/cron.d/carrera-demo-salud`): consulta `/api/health` por HTTPS, registra en
+  `/var/log/carrera-demo-salud.log` y tras dos fallos seguidos reinicia `web` y `worker`. El aviso externo (correo o
+  mensaje) se delega a un monitor de disponibilidad apuntado a la misma URL, con cuenta propia del equipo.
 - Al adjudicar, la producción se levanta en V2Networks (secciones siguientes) con base limpia y el reglamento
   real; la demo se apaga y sus datos ficticios se borran.
 

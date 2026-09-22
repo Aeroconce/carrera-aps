@@ -8,7 +8,7 @@ import { listarFuncionarios } from "../../src/lib/carrera/listado";
 import { cargarReglas } from "../../src/lib/carrera/reglas";
 import type { ContextoAuditoria } from "../../src/lib/db/auditado";
 import { sincronizarAlertas } from "../../src/lib/db/alertas";
-import { darDeBaja, reconocerBienio, registrarCambioNivel, registrarCapacitacion, registrarEstudio, registrarExperiencia } from "../../src/lib/db/carrera";
+import { actualizarFuncionario, darDeBaja, reconocerBienio, registrarCambioNivel, registrarCapacitacion, registrarEstudio, registrarExperiencia } from "../../src/lib/db/carrera";
 import { importarCargaInicial } from "../../src/lib/db/importacion";
 import { prisma } from "../../src/lib/db/prisma";
 import { desdeDate, diasEntre, hoyEnChile, sumarAnios, sumarDias, type FechaCivil } from "../../src/lib/fechas/civil";
@@ -97,7 +97,11 @@ export function planificarDotacion(): Plan[] {
     for (let i = 0; i < cantidad; i++) {
       correlativo++;
       const mujer = azar() < 0.62;
-      const nombres = `${(mujer ? NOMBRES_F : NOMBRES_M)[Math.floor(azar() * 30)]} ${(mujer ? NOMBRES_F : NOMBRES_M)[Math.floor(azar() * 30)]}`;
+      const lista = mujer ? NOMBRES_F : NOMBRES_M;
+      const primero = Math.floor(azar() * 30);
+      let segundo = Math.floor(azar() * 30);
+      if (segundo === primero) segundo = (segundo + 1) % 30; // sin "Macarena Macarena"; misma cantidad de tiradas
+      const nombres = `${lista[primero]} ${lista[segundo]}`;
       const apellidos = `${APELLIDOS[Math.floor(azar() * APELLIDOS.length)]} ${APELLIDOS[Math.floor(azar() * APELLIDOS.length)]}`;
       const r = azar();
       const fechaIngreso = r < 0.15 ? fechaAleatoria(azar, 1998, 2009) : r < 0.85 ? fechaAleatoria(azar, 2010, 2022) : fechaAleatoria(azar, 2023, 2024);
@@ -187,10 +191,26 @@ export function planificarDotacion(): Plan[] {
 // Carga
 // ---------------------------------------------------------------------------
 
+/** Repara nombres con el segundo nombre igual al primero (generador anterior): auditado e idempotente. */
+async function repararNombresRepetidos(ctx: ContextoAuditoria, institucionId: string): Promise<void> {
+  const funcionarios = await prisma.funcionario.findMany({ where: { institucionId }, select: { id: true, nombres: true } });
+  let reparados = 0;
+  for (const f of funcionarios) {
+    const [primero, segundo] = f.nombres.split(" ");
+    if (!primero || !segundo || primero !== segundo) continue;
+    const lista = NOMBRES_F.includes(primero) ? NOMBRES_F : NOMBRES_M;
+    const nuevo = lista[(lista.indexOf(primero) + 1) % lista.length] ?? primero;
+    await actualizarFuncionario(ctx, f.id, { nombres: `${primero} ${nuevo}` });
+    reparados++;
+  }
+  if (reparados > 0) console.log(`Dotación: ${reparados} nombres repetidos corregidos`);
+}
+
 export async function sembrarDotacion(ctx: ContextoAuditoria, institucionId: string): Promise<void> {
   const existentes = await prisma.funcionario.count({ where: { institucionId } });
   if (existentes >= 300) {
     console.log(`Dotación: ya hay ${existentes} funcionarios, se omite`);
+    await repararNombresRepetidos(ctx, institucionId);
     return;
   }
   const planes = planificarDotacion();
