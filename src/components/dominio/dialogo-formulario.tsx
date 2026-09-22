@@ -26,8 +26,10 @@ export interface OpcionCampo {
 export interface CampoFormulario {
   nombre: string;
   etiqueta?: string;
-  tipo: "text" | "number" | "fecha" | "select" | "checkbox" | "textarea" | "hidden" | "email";
+  tipo: "text" | "number" | "fecha" | "select" | "checkbox" | "textarea" | "hidden" | "email" | "archivo";
   opciones?: readonly OpcionCampo[];
+  /** Tipos aceptados por un campo de archivo (atributo accept) */
+  aceptar?: string;
   requerido?: boolean;
   valorInicial?: string | number | boolean | null;
   ayuda?: string;
@@ -139,7 +141,7 @@ export function DialogoFormulario({
                 return <input key={campo.nombre} type="hidden" name={campo.nombre} value={String(campo.valorInicial ?? "")} />;
               }
               const invalido = Boolean(errores[campo.nombre]?.length);
-              const clase = campo.tipo === "textarea" || campo.ancho === "completo" ? "sm:col-span-2" : "";
+              const clase = campo.tipo === "textarea" || campo.tipo === "archivo" || campo.ancho === "completo" ? "sm:col-span-2" : "";
               if (campo.tipo === "checkbox") {
                 return (
                   <Field key={campo.nombre} orientation="horizontal" data-invalid={invalido} className={clase}>
@@ -167,6 +169,16 @@ export function DialogoFormulario({
                     </select>
                   ) : campo.tipo === "textarea" ? (
                     <Textarea id={campo.nombre} name={campo.nombre} defaultValue={String(campo.valorInicial ?? "")} required={campo.requerido} aria-invalid={invalido} rows={campo.filas ?? 3} className="font-mono text-xs" />
+                  ) : campo.tipo === "archivo" ? (
+                    <EntradaNativa
+                      id={campo.nombre}
+                      name={campo.nombre}
+                      type="file"
+                      accept={campo.aceptar}
+                      required={campo.requerido}
+                      aria-invalid={invalido}
+                      className="h-9 file:mr-2 file:rounded-md file:border-0 file:bg-institucional-suave file:px-2 file:text-sm"
+                    />
                   ) : campo.tipo === "number" ? (
                     <EntradaNativa
                       id={campo.nombre}

@@ -34,4 +34,4 @@ Datos de demostración: 320 funcionarios ficticios en los cuatro establecimiento
 | 14 | Auditoría de cambios | Auditoría; ficha → Historial | Usuario, fecha, acción y detalle con valor anterior y nuevo por campo; filtros; exportación; registro de accesos |
 | 15 | Respaldo de información | Respaldos | Historial diario con tamaño, destino y hash; último verificado por restauración; política publicada; "Ejecutar respaldo ahora" |
 
-Funcionalidades mínimas adicionales: Parámetros (reglas con vigencia desde/hasta, BT 5) · Importar (planilla de carga inicial con validación) · Documentos (repositorio por funcionario y tipo) · Calificaciones (procesos, puntaje, lista y anotaciones) · Usuarios (cuentas por perfil, registro de accesos).
+Funcionalidades mínimas adicionales: Parámetros (reglas con vigencia desde/hasta, BT 5) · Importar (planilla de carga inicial con validación) · Documentos (repositorio por funcionario y tipo) · Calificaciones (procesos con comisión evaluadora, factores y subfactores ponderados, notas por factor con puntaje final calculado, lista, acta adjunta y anotaciones de mérito o demérito) · Usuarios (cuentas por perfil, registro de accesos).

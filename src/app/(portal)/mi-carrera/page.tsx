@@ -58,7 +58,7 @@ export default async function MiCarreraPage() {
 
   const { funcionario: f, estado } = carrera;
   const [calificaciones, documentos] = await Promise.all([
-    prisma.calificacionFuncionario.findMany({ where: { funcionarioId: f.id }, include: { proceso: true, notasMerito: true }, orderBy: { proceso: { periodoDesde: "desc" } } }),
+    prisma.calificacionFuncionario.findMany({ where: { funcionarioId: f.id }, include: { proceso: true, notasMerito: true, acta: { select: { id: true } } }, orderBy: { proceso: { periodoDesde: "desc" } } }),
     prisma.documento.findMany({ where: { funcionarioId: f.id }, orderBy: { createdAt: "desc" } }),
   ]);
   const actividades = new Map(estado.capacitacion.actividades.map((a) => [a.id, a]));
@@ -181,11 +181,18 @@ export default async function MiCarreraPage() {
         ) : (
           <ul className="divide-y divide-linea">
             {calificaciones.map((c) => (
-              <li key={c.id} className="py-2 text-sm">
-                <p className="font-medium">{c.proceso.nombre}</p>
-                <p className="text-xs text-tinta-secundaria">
-                  {t.calificaciones.puntaje(formatearPuntos(c.puntajeFinal))} · {t.calificaciones.lista(c.lista)} · {t.calificaciones.notas(c.notasMerito.filter((n) => n.tipo === "MERITO").length, c.notasMerito.filter((n) => n.tipo === "DEMERITO").length)}
-                </p>
+              <li key={c.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                <div>
+                  <p className="font-medium">{c.proceso.nombre}</p>
+                  <p className="text-xs text-tinta-secundaria">
+                    {t.calificaciones.puntaje(formatearPuntos(c.puntajeFinal))} · {t.calificaciones.lista(c.lista)} · {t.calificaciones.notas(c.notasMerito.filter((n) => n.tipo === "MERITO").length, c.notasMerito.filter((n) => n.tipo === "DEMERITO").length)}
+                  </p>
+                </div>
+                {c.acta && (
+                  <a href={`/documentos/${c.acta.id}/descargar`} className="shrink-0 text-institucional underline" aria-label={`${t.calificaciones.acta}: ${c.proceso.nombre}`}>
+                    {t.calificaciones.acta}
+                  </a>
+                )}
               </li>
             ))}
           </ul>

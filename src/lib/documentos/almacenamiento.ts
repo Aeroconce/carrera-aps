@@ -48,9 +48,16 @@ export async function leerArchivo(ruta: string): Promise<Uint8Array> {
   return readFile(absoluta);
 }
 
-/** PDF mínimo válido con una línea de texto: para los documentos ficticios de la demo. */
-export function pdfMinimo(texto: string): Uint8Array {
-  const contenido = `BT /F1 12 Tf 40 750 Td (${texto.replace(/[()\\]/g, " ")}) Tj ET`;
+/** PDF mínimo válido con una o varias líneas de texto (solo ASCII: la fuente base no trae acentos): documentos ficticios de la demo. */
+export function pdfMinimo(texto: string | string[]): Uint8Array {
+  const lineas = (Array.isArray(texto) ? texto : [texto]).map((l) =>
+    l
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^\x20-\x7e]/g, " ")
+      .replace(/[()\\]/g, " "),
+  );
+  const contenido = `BT /F1 12 Tf 16 TL 40 780 Td ${lineas.map((l, i) => `${i > 0 ? "T* " : ""}(${l}) Tj`).join(" ")} ET`;
   const objetos = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",

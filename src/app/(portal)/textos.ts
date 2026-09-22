@@ -56,6 +56,7 @@ export const textosPortal = {
     lista: (lista: string | null) => (lista ? `Lista: ${lista}` : "Sin lista"),
     puntaje: (p: string) => `Puntaje final ${p}`,
     notas: (meritos: number, demeritos: number) => `${meritos} anotaciones de mérito · ${demeritos} de demérito`,
+    acta: "Ver acta",
     vacio: "Sin calificaciones registradas.",
   },
   documentos: {

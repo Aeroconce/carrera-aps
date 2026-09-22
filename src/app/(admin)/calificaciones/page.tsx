@@ -5,27 +5,36 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { agregarNotaAction, calificarAction, crearProcesoAction } from "@/lib/acciones/calificaciones";
+import { adjuntarActaAction, agregarNotaAction, crearProcesoAction } from "@/lib/acciones/calificaciones";
 import { exigirSesion, rolDe } from "@/lib/auth/sesion";
 import { cargarReglas } from "@/lib/carrera/reglas";
+import { aFactorBase } from "@/lib/db/calificaciones";
 import { prisma } from "@/lib/db/prisma";
 import { desdeDate, formatearChileno, hoyEnChile } from "@/lib/fechas/civil";
 import { formatearFecha, formatearPuntos, formatearRut, nombreCompleto } from "@/lib/formato";
 import { BotonEstadoProceso } from "./acciones";
+import { DialogoCalificar, type EscalaCalificacion } from "./dialogo-calificar";
+import { PanelComision, PanelFactores } from "./panel-proceso";
 import { textosCalificaciones as t } from "./textos";
 
 export const metadata: Metadata = { title: t.titulo };
 
-// Módulo Calificaciones (BT 4.6, doc 05 §6, doc 13 F15), simplificado: procesos mínimos y calificación por funcionario.
+// Módulo Calificaciones (BT 4.6, doc 05 §6, doc 13 F15): procesos con comisión y factores; calificación por
+// funcionario con notas por factor, puntaje final calculado, lista, acta y anotaciones.
 export default async function CalificacionesPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sesion = await exigirSesion({ roles: ["ADMIN"] });
   const institucionId = sesion.user.institucionId!;
   const puedeEditar = rolDe(sesion.user) === "ADMIN";
   const params = await searchParams;
   const uno = (k: string) => (typeof params[k] === "string" && (params[k] as string).trim() ? (params[k] as string).trim() : undefined);
-  const procesos = await prisma.procesoCalificacion.findMany({ where: { institucionId }, include: { _count: { select: { calificaciones: true } } }, orderBy: { periodoDesde: "desc" } });
+  const procesos = await prisma.procesoCalificacion.findMany({
+    where: { institucionId },
+    include: { _count: { select: { calificaciones: true, factores: true } }, comision: { orderBy: { createdAt: "asc" } }, factores: true },
+    orderBy: { periodoDesde: "desc" },
+  });
   const procesoId = uno("proceso") ?? procesos.find((p) => p.estado === "ABIERTO")?.id ?? procesos[0]?.id;
   const proceso = procesos.find((p) => p.id === procesoId) ?? null;
+  const origen = proceso ? (procesos.find((p) => p.id !== proceso.id && p._count.factores > 0) ?? null) : null;
   const q = uno("q");
   const soloPendientes = uno("pendientes") === "1";
   const rut = q ? q.replace(/[^0-9kK]/g, "").toUpperCase() : "";
@@ -38,7 +47,10 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
             estado: "ACTIVO",
             ...(q ? { OR: [{ nombres: { contains: q, mode: "insensitive" } }, { apellidos: { contains: q, mode: "insensitive" } }, ...(rut ? [{ rut: { startsWith: rut } }] : [])] } : {}),
           },
-          include: { establecimiento: { select: { nombre: true } }, calificaciones: { where: { procesoId: proceso.id }, include: { notasMerito: true } } },
+          include: {
+            establecimiento: { select: { nombre: true } },
+            calificaciones: { where: { procesoId: proceso.id }, include: { notasMerito: true, acta: { select: { id: true, nombre: true } } } },
+          },
           orderBy: [{ apellidos: "asc" }, { nombres: "asc" }],
         })
       : [],
@@ -46,7 +58,11 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
   ]);
   const filas = soloPendientes ? funcionarios.filter((f) => f.calificaciones.length === 0) : funcionarios;
   const totalActivos = await prisma.funcionario.count({ where: { institucionId, estado: "ACTIVO" } });
-  const reglaDe = (categoria: "A" | "B" | "C" | "D" | "E" | "F") => (proceso ? reglas.parametrosOpcionales("CALIFICACION", desdeDate(proceso.periodoHasta), categoria) : null);
+  const factores = proceso ? proceso.factores.map(aFactorBase) : [];
+  const escalaDe = (categoria: "A" | "B" | "C" | "D" | "E" | "F"): EscalaCalificacion | null => {
+    const regla = proceso ? reglas.parametrosOpcionales("CALIFICACION", desdeDate(proceso.periodoHasta), categoria) : null;
+    return regla ? { minima: regla.escalaMinima, maxima: regla.escalaMaxima, listas: regla.listas.map((l) => ({ nombre: l.nombre, puntajeMinimo: l.puntajeMinimo })), listaConMerito: regla.listaConMerito } : null;
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -114,6 +130,11 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
             <h2 className="text-lg font-medium">{proceso.nombre}</h2>
             <p className="text-sm text-tinta-secundaria">{t.resumen(proceso._count.calificaciones, totalActivos)}</p>
           </div>
+          {puedeEditar && proceso.estado !== "ABIERTO" && <p className="rounded-lg border border-linea bg-superficie px-3 py-2 text-sm text-tinta-secundaria">{t.soloAbierto}</p>}
+          <div className="grid gap-3 md:grid-cols-2">
+            <PanelComision procesoId={proceso.id} abierto={proceso.estado === "ABIERTO"} integrantes={proceso.comision} puedeEditar={puedeEditar} />
+            <PanelFactores procesoId={proceso.id} abierto={proceso.estado === "ABIERTO"} factores={factores} puedeEditar={puedeEditar} origen={origen ? { id: origen.id, nombre: origen.nombre } : null} />
+          </div>
           <form method="get" action="/calificaciones" className="flex flex-col gap-2 rounded-lg border border-linea bg-superficie p-3 md:flex-row md:flex-wrap md:items-end">
             <input type="hidden" name="proceso" value={proceso.id} />
             <label className="flex flex-col gap-1 text-xs text-tinta-secundaria md:min-w-56">
@@ -140,6 +161,7 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
                     <TableHead>{t.columnas.establecimiento}</TableHead>
                     <TableHead className="text-right">{t.columnas.puntaje}</TableHead>
                     <TableHead>{t.columnas.lista}</TableHead>
+                    <TableHead>{t.columnas.acta}</TableHead>
                     <TableHead>{t.columnas.notas}</TableHead>
                     {puedeEditar && <TableHead>{t.columnas.acciones}</TableHead>}
                   </TableRow>
@@ -147,7 +169,7 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
                 <TableBody>
                   {filas.map((f) => {
                     const c = f.calificaciones[0];
-                    const regla = reglaDe(f.categoria);
+                    const escala = escalaDe(f.categoria);
                     const meritos = c?.notasMerito.filter((n) => n.tipo === "MERITO").length ?? 0;
                     const demeritos = c?.notasMerito.filter((n) => n.tipo === "DEMERITO").length ?? 0;
                     return (
@@ -158,25 +180,41 @@ export default async function CalificacionesPage({ searchParams }: { searchParam
                         </TableCell>
                         <TableCell>{f.establecimiento.nombre}</TableCell>
                         <TableCell className="text-right">{c ? formatearPuntos(c.puntajeFinal) : <span className="text-tinta-secundaria">{t.sinCalificar}</span>}</TableCell>
-                        <TableCell>{c?.lista ? <Badge variant={regla && c.lista === regla.listaConMerito ? "default" : "secondary"}>{c.lista}</Badge> : ""}</TableCell>
+                        <TableCell>{c?.lista ? <Badge variant={escala && c.lista === escala.listaConMerito ? "default" : "secondary"}>{c.lista}</Badge> : ""}</TableCell>
+                        <TableCell className="text-xs">
+                          {c?.acta ? (
+                            <a href={`/documentos/${c.acta.id}/descargar`} className="text-institucional underline" aria-label={`${t.acta.ver}: ${nombreCompleto(f)}`}>{t.acta.ver}</a>
+                          ) : c ? (
+                            <span className="text-tinta-secundaria">{t.acta.sinActa}</span>
+                          ) : (
+                            ""
+                          )}
+                        </TableCell>
                         <TableCell className="text-xs text-tinta-secundaria">{c ? `${meritos} ${t.merito} · ${demeritos} ${t.demerito}` : ""}</TableCell>
                         {puedeEditar && (
                           <TableCell>
                             <div className="flex flex-wrap gap-1.5">
                               {proceso.estado === "ABIERTO" && (
+                                <DialogoCalificar
+                                  procesoId={proceso.id}
+                                  funcionarioId={f.id}
+                                  nombre={nombreCompleto(f)}
+                                  factores={factores}
+                                  escala={escala}
+                                  inicial={c ? { puntajes: (c.puntajes ?? {}) as Record<string, number>, puntajeFinal: Number(c.puntajeFinal), observaciones: c.observaciones, tieneActa: c.acta !== null } : null}
+                                />
+                              )}
+                              {c && !c.acta && (
                                 <DialogoFormulario
-                                  titulo={t.dialogoCalificar.titulo(nombreCompleto(f))}
-                                  descripcion={regla ? t.dialogoCalificar.descripcion(regla.escalaMinima, regla.escalaMaxima, regla.listaConMerito) : undefined}
-                                  textoBoton={c ? t.editar : t.calificar}
-                                  varianteBoton={c ? "outline" : "default"}
+                                  titulo={t.acta.dialogo.titulo(nombreCompleto(f))}
+                                  descripcion={t.acta.dialogo.descripcion}
+                                  textoBoton={t.acta.adjuntar}
+                                  varianteBoton="outline"
                                   tamanoBoton="xs"
-                                  campos={[
-                                    { nombre: "puntajeFinal", etiqueta: t.dialogoCalificar.puntaje, tipo: "number", requerido: true, min: regla?.escalaMinima, max: regla?.escalaMaxima, paso: "0.1", valorInicial: c ? Number(c.puntajeFinal) : null },
-                                    { nombre: "observaciones", etiqueta: t.dialogoCalificar.observaciones, tipo: "textarea", valorInicial: c?.observaciones ?? "" },
-                                  ]}
-                                  accion={calificarAction.bind(null, proceso.id, f.id)}
-                                  textoEnviar={t.dialogoCalificar.enviar}
-                                  exito={t.dialogoCalificar.exito}
+                                  campos={[{ nombre: "acta", etiqueta: t.acta.dialogo.archivo, tipo: "archivo", requerido: true, aceptar: ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" }]}
+                                  accion={adjuntarActaAction.bind(null, c.id)}
+                                  textoEnviar={t.acta.dialogo.enviar}
+                                  exito={t.acta.dialogo.exito}
                                 />
                               )}
                               {c && (
