@@ -167,3 +167,52 @@
     background: var(--color-superficie);
   }
 }
+
+/* Listas desplegables con el diseño de la aplicación (doc 12). Chromium 135+ permite dar estilo al desplegable del
+   <select> nativo (appearance: base-select); los navegadores sin soporte muestran la lista del sistema, con la
+   misma funcionalidad. Los formularios y las pruebas siguen usando <select> estándar. */
+@supports (appearance: base-select) {
+  select {
+    appearance: base-select;
+    align-items: center;
+  }
+  select::picker-icon {
+    color: var(--color-tinta-secundaria);
+    transition: rotate 150ms ease;
+  }
+  select:open::picker-icon {
+    rotate: 180deg;
+  }
+  select::picker(select) {
+    appearance: base-select;
+    min-width: anchor-size(width);
+    margin-block: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-linea);
+    border-radius: 0.5rem;
+    background: var(--color-superficie);
+    color: var(--color-tinta);
+    box-shadow: 0 10px 28px rgb(34 48 58 / 0.14);
+  }
+  select option {
+    padding: 0.4rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    cursor: pointer;
+  }
+  select option:hover,
+  select option:focus-visible {
+    background: var(--color-institucional-suave);
+    color: var(--color-tinta);
+    outline: none;
+  }
+  select option:checked {
+    color: var(--color-institucional);
+    font-weight: 500;
+  }
+  select option::checkmark {
+    color: var(--color-institucional);
+    margin-inline-end: 0.5rem;
+  }
+}

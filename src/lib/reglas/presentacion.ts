@@ -64,7 +64,7 @@ export const ETIQUETAS_PARAMETRO = {
 
 /** Ayudas cortas del formulario (doc 12: ayuda debajo del campo). */
 export const AYUDAS_PARAMETRO = {
-  hasta: "Vacío: sin límite superior.",
+  hasta: "El último tramo puede quedar con «Hasta» vacío: no tiene límite superior.",
   factor: "1 = sin ajuste; 0,5 = la mitad de los puntos.",
   puntosEstudio: "Vacío: el estudio se registra como beneficio informativo, sin puntaje.",
   umbrales: "Niveles que no aparezcan en la tabla no tienen umbral.",

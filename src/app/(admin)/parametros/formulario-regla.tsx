@@ -288,7 +288,6 @@ export function DialogoNuevaVersion({ tipo, etiqueta, vigente, vigenteDesdeInici
   interface Columna {
     clave: string;
     etiqueta: string;
-    ayuda?: string;
     texto?: boolean;
   }
   function tabla(rotulo: string, columnas: Columna[], agregar: string, ayuda?: string): ReactNode {
@@ -320,7 +319,6 @@ export function DialogoNuevaVersion({ tipo, etiqueta, vigente, vigenteDesdeInici
                     aria-invalid={invalido(clave)}
                     className="h-9"
                   />
-                  {c.ayuda && i === 0 && !invalido(clave) && <FieldDescription>{c.ayuda}</FieldDescription>}
                   <FieldError errors={errores[clave]?.map((message) => ({ message }))} />
                 </Field>
               );
@@ -361,7 +359,7 @@ export function DialogoNuevaVersion({ tipo, etiqueta, vigente, vigenteDesdeInici
       case "TABLA_CAPACITACION":
         return (
           <>
-            {tabla(e.tramosHoras, [{ clave: "desde", etiqueta: e.desde }, { clave: "hasta", etiqueta: e.hasta, ayuda: ayudas.hasta }, { clave: "puntos", etiqueta: e.puntosTramo }], t.agregarTramo)}
+            {tabla(e.tramosHoras, [{ clave: "desde", etiqueta: e.desde }, { clave: "hasta", etiqueta: e.hasta }, { clave: "puntos", etiqueta: e.puntosTramo }], t.agregarTramo, ayudas.hasta)}
             {campoBooleano("requiereAprobacion", e.requiereAprobacion)}
             {campoNumero("conNota", e.conNota, { ayuda: ayudas.factor })}
             {campoNumero("sinNota", e.sinNota)}
