@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { DialogoFormulario, type CampoFormulario } from "@/components/dominio/dialogo-formulario";
+import { DialogoFormulario } from "@/components/dominio/dialogo-formulario";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { actualizarEstablecimientoAction, actualizarInstitucionAction, crearEstablecimientoAction, crearReglaAction } from "@/lib/acciones/parametros";
+import { actualizarEstablecimientoAction, actualizarInstitucionAction, crearEstablecimientoAction } from "@/lib/acciones/parametros";
 import { exigirSesion } from "@/lib/auth/sesion";
 import { prisma } from "@/lib/db/prisma";
 import { formatearChileno, hoyEnChile } from "@/lib/fechas/civil";
 import { formatearFecha, formatearRut } from "@/lib/formato";
 import { TIPOS_REGLA, VALORES_POR_DEFECTO } from "@/lib/motor/reglas";
+import { resumenRegla } from "@/lib/reglas/presentacion";
 import { ETIQUETAS } from "@/lib/reportes/etiquetas";
 import type { ReglaCarrera } from "@/generated/prisma/client";
+import { DialogoNuevaVersion } from "./formulario-regla";
 import { textosParametros as t } from "./textos";
 
 export const metadata: Metadata = { title: t.titulo };
@@ -17,41 +19,17 @@ export const metadata: Metadata = { title: t.titulo };
 const CATEGORIAS = ["A", "B", "C", "D", "E", "F"];
 const TIPOS_ESTABLECIMIENTO = Object.entries(ETIQUETAS.tipoEstablecimiento).map(([valor, etiqueta]) => ({ valor, etiqueta }));
 
-/** Parámetros de una regla como lista legible (un nivel de anidación). */
-function ListaParametros({ parametros }: { parametros: unknown }) {
-  if (!parametros || typeof parametros !== "object") return <span className="text-xs">{JSON.stringify(parametros)}</span>;
+/** Parámetros de una versión en lenguaje claro (etiqueta → valor), sin claves crudas. */
+function ResumenRegla({ tipo, parametros }: { tipo: (typeof TIPOS_REGLA)[number]; parametros: unknown }) {
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-      {Object.entries(parametros as Record<string, unknown>).map(([clave, valor]) => (
-        <div key={clave} className="contents">
-          <dt className="text-tinta-secundaria">{clave}</dt>
-          <dd className="font-mono break-all">{typeof valor === "object" ? JSON.stringify(valor) : String(valor)}</dd>
+      {resumenRegla(tipo, parametros).map((fila, i) => (
+        <div key={`${fila.etiqueta}-${i}`} className="contents">
+          <dt className="text-tinta-secundaria">{fila.etiqueta}</dt>
+          <dd className="font-medium">{fila.valor}</dd>
         </div>
       ))}
     </dl>
-  );
-}
-
-function DialogoNuevaVersion({ tipo, vigente }: { tipo: (typeof TIPOS_REGLA)[number]; vigente: ReglaCarrera | null }) {
-  const d = t.reglas.dialogo;
-  const inicial = vigente?.parametros ?? (VALORES_POR_DEFECTO as Partial<Record<string, unknown>>)[tipo] ?? {};
-  const campos: CampoFormulario[] = [
-    { nombre: "categoria", etiqueta: d.categoria, tipo: "select", valorInicial: "", opciones: [{ valor: "", etiqueta: d.todas }, ...CATEGORIAS.map((c) => ({ valor: c, etiqueta: c }))] },
-    { nombre: "vigenteDesde", etiqueta: d.vigenteDesde, tipo: "fecha", requerido: true, valorInicial: formatearChileno(hoyEnChile()) },
-    { nombre: "fuente", etiqueta: d.fuente, tipo: "text", requerido: true, ayuda: d.fuenteAyuda, ancho: "completo", valorInicial: vigente?.fuente ?? "" },
-    { nombre: "parametros", etiqueta: d.parametros, tipo: "textarea", requerido: true, ayuda: d.parametrosAyuda, filas: 8, valorInicial: JSON.stringify(inicial, null, 2) },
-  ];
-  return (
-    <DialogoFormulario
-      titulo={d.titulo(ETIQUETAS.tipoRegla[tipo])}
-      descripcion={d.descripcion}
-      textoBoton={t.reglas.nuevaVersion}
-      varianteBoton="outline"
-      campos={campos}
-      accion={crearReglaAction.bind(null, tipo)}
-      textoEnviar={d.enviar}
-      exito={d.exito}
-    />
   );
 }
 
@@ -86,12 +64,17 @@ export default async function ParametrosPage() {
               <li key={tipo} className="flex flex-col gap-2 rounded-lg border border-linea bg-superficie p-4">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-base font-medium">{ETIQUETAS.tipoRegla[tipo]}</h3>
-                  <DialogoNuevaVersion tipo={tipo} vigente={vigente} />
+                  <DialogoNuevaVersion
+                    tipo={tipo}
+                    etiqueta={ETIQUETAS.tipoRegla[tipo]}
+                    vigente={vigente ? { parametros: vigente.parametros, fuente: vigente.fuente } : (VALORES_POR_DEFECTO as Partial<Record<string, unknown>>)[tipo] ? { parametros: (VALORES_POR_DEFECTO as Partial<Record<string, unknown>>)[tipo], fuente: "" } : null}
+                    vigenteDesdeInicial={formatearChileno(hoy)}
+                  />
                 </div>
                 <p className="text-xs font-medium text-tinta-secundaria">{t.reglas.vigente}</p>
                 {vigente ? (
                   <div className="flex flex-col gap-1">
-                    <ListaParametros parametros={vigente.parametros} />
+                    <ResumenRegla tipo={tipo} parametros={vigente.parametros} />
                     <p className="text-xs text-tinta-secundaria">
                       {t.reglas.desde} {formatearFecha(vigente.vigenteDesde)} · {t.reglas.fuente}: {vigente.fuente}
                     </p>
@@ -102,7 +85,7 @@ export default async function ParametrosPage() {
                 {especificas.map((r) => (
                   <div key={r.id} className="rounded-md border border-linea p-2">
                     <p className="text-xs font-medium">{t.reglas.categoria(r.categoria)}</p>
-                    <ListaParametros parametros={r.parametros} />
+                    <ResumenRegla tipo={tipo} parametros={r.parametros} />
                   </div>
                 ))}
                 {historial.length > 0 && (

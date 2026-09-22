@@ -73,7 +73,7 @@ test.describe("parámetros", () => {
     await page.goto("/parametros");
     await expect(page.getByRole("heading", { name: "Parámetros", level: 1 })).toBeVisible();
     const tope = page.locator("li").filter({ has: page.getByRole("heading", { name: "Tope anual de capacitación" }) });
-    await expect(tope).toContainText("tope");
+    await expect(tope).toContainText("Tope anual (puntos)"); // en lenguaje claro, sin claves crudas
     await expect(tope).toContainText("10");
     await expect(tope.getByText(/Historial de versiones \(2\)/)).toBeVisible();
     await capturar(page, "parametros", proyecto);
@@ -87,14 +87,15 @@ test.describe("parámetros", () => {
     const dialogo = page.getByRole("dialog", { name: "Nueva versión: Tope anual de capacitación" });
     await expect(dialogo.getByText("los reportes a fechas anteriores no cambian")).toBeVisible();
 
-    // Parámetros inválidos: el servidor los rechaza con el detalle del campo
+    // Sin JSON: un campo con nombre por parámetro, cargado con la versión vigente y validado en pantalla
     await dialogo.getByLabel("Vigente desde").fill("01/01/2027");
     await dialogo.getByLabel("Fuente").fill(FUENTE_E2E);
-    await dialogo.getByLabel("Parámetros (JSON)").fill('{ "tope": "doce" }');
+    await expect(dialogo.getByLabel("Tope anual (puntos)")).toHaveValue("10");
+    await dialogo.getByLabel("Tope anual (puntos)").fill("doce");
     await dialogo.getByRole("button", { name: "Guardar versión" }).click();
-    await expect(dialogo.getByText(/tope:/)).toBeVisible();
+    await expect(dialogo.getByText("Escribe un número.")).toBeVisible();
 
-    await dialogo.getByLabel("Parámetros (JSON)").fill('{ "tope": 12 }');
+    await dialogo.getByLabel("Tope anual (puntos)").fill("12");
     await capturar(page, "parametros-nueva-version", proyecto);
     await dialogo.getByRole("button", { name: "Guardar versión" }).click();
     await expect(page.getByText("Nueva versión de la regla guardada")).toBeVisible();
