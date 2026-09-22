@@ -26,7 +26,7 @@ export type EntradaAuditoria = Auditoria & { usuario: { name: string }; funciona
 
 /** Ids de todos los registros que cuelgan de un funcionario (los que aparecen como entidadId en la bitácora). */
 export async function idsDeFuncionario(funcionarioId: string): Promise<string[]> {
-  const [bienios, capacitaciones, estudios, niveles, experiencias, apertura, alertas, calificaciones] = await Promise.all([
+  const [bienios, capacitaciones, estudios, niveles, experiencias, apertura, alertas, calificaciones, documentos, notas] = await Promise.all([
     prisma.bienio.findMany({ where: { funcionarioId }, select: { id: true } }),
     prisma.capacitacion.findMany({ where: { funcionarioId }, select: { id: true } }),
     prisma.estudio.findMany({ where: { funcionarioId }, select: { id: true } }),
@@ -35,8 +35,14 @@ export async function idsDeFuncionario(funcionarioId: string): Promise<string[]>
     prisma.apertura.findUnique({ where: { funcionarioId }, select: { id: true } }),
     prisma.alerta.findMany({ where: { funcionarioId }, select: { id: true } }),
     prisma.calificacionFuncionario.findMany({ where: { funcionarioId }, select: { id: true } }),
+    prisma.documento.findMany({ where: { funcionarioId }, select: { id: true } }),
+    prisma.notaMerito.findMany({ where: { calificacion: { funcionarioId } }, select: { id: true } }),
   ]);
-  return [funcionarioId, ...[...bienios, ...capacitaciones, ...estudios, ...niveles, ...experiencias, ...alertas, ...calificaciones].map((x) => x.id), ...(apertura ? [apertura.id] : [])];
+  return [
+    funcionarioId,
+    ...[...bienios, ...capacitaciones, ...estudios, ...niveles, ...experiencias, ...alertas, ...calificaciones, ...documentos, ...notas].map((x) => x.id),
+    ...(apertura ? [apertura.id] : []),
+  ];
 }
 
 /** Para cada entrada, el funcionario al que pertenece la entidad afectada (si aplica). */
@@ -59,6 +65,8 @@ async function resolverFuncionarios(entradas: Auditoria[]): Promise<Map<string, 
     consulta("Apertura", (i) => prisma.apertura.findMany({ where: { id: { in: i } }, select: { id: true, funcionarioId: true } })),
     consulta("Alerta", (i) => prisma.alerta.findMany({ where: { id: { in: i } }, select: { id: true, funcionarioId: true } })),
     consulta("CalificacionFuncionario", (i) => prisma.calificacionFuncionario.findMany({ where: { id: { in: i } }, select: { id: true, funcionarioId: true } })),
+    consulta("Documento", async (i) => (await prisma.documento.findMany({ where: { id: { in: i }, funcionarioId: { not: null } }, select: { id: true, funcionarioId: true } })).map((d) => ({ id: d.id, funcionarioId: d.funcionarioId! }))),
+    consulta("NotaMerito", async (i) => (await prisma.notaMerito.findMany({ where: { id: { in: i } }, select: { id: true, calificacion: { select: { funcionarioId: true } } } })).map((n) => ({ id: n.id, funcionarioId: n.calificacion.funcionarioId }))),
   ]);
   const entidadAFuncionario = new Map<string, string>();
   for (const id of ids("Funcionario")) entidadAFuncionario.set(id, id);

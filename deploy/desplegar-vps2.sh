@@ -31,6 +31,11 @@ else
 fi
 
 $DC up -d web worker
+# Espera a que `web` esté sano antes de la comprobación final
+for i in $(seq 1 45); do
+  if $DC ps web --format '{{.Health}}' 2>/dev/null | grep -q healthy; then break; fi
+  sleep 2
+done
 $DC ps
 echo "Salud local:"
 curl -fsS -H "Host: ${DOMINIO:-demo-carrera.aeroconce.cl}" "http://127.0.0.1:${PUERTO_WEB:-3060}/api/health" && echo

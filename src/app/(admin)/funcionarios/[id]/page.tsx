@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { exigirSesion, rolDe } from "@/lib/auth/sesion";
 import { carreraDeFuncionario } from "@/lib/carrera/funcionario";
 import { ordenarAlertas } from "@/lib/carrera/listado";
+import { idsDeFuncionario } from "@/lib/auditoria/consulta";
 import { prisma } from "@/lib/db/prisma";
 import { formatearRut, nombreCompleto } from "@/lib/formato";
 import { generarAlertas } from "@/lib/motor/alertas";
@@ -51,15 +52,8 @@ export default async function FichaFuncionarioPage({ params, searchParams }: { p
   const { funcionario: f, estado, reglas } = carrera;
   const puedeEditar = rolDe(sesion.user) === "ADMIN" && f.estado === "ACTIVO";
   const alertas = ordenarAlertas(generarAlertas(estado, reglas));
-  const idsHijos = [
-    f.id,
-    ...f.bienios.map((b) => b.id),
-    ...f.capacitaciones.map((c) => c.id),
-    ...f.estudios.map((e) => e.id),
-    ...f.niveles.map((n) => n.id),
-    ...f.experiencias.map((e) => e.id),
-    ...(f.apertura ? [f.apertura.id] : []),
-  ];
+  // Todo lo que cuelga del funcionario, calificaciones, anotaciones, documentos y alertas incluidos (4.1: historial de cambios)
+  const idsHijos = await idsDeFuncionario(f.id);
   const [historial, establecimientos] = await Promise.all([
     prisma.auditoria.findMany({
       where: { entidadId: { in: idsHijos } },

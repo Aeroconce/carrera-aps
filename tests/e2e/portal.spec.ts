@@ -44,7 +44,7 @@ test("el funcionario ve su carrera y nada más", async ({ page }, testInfo) => {
   await entrar(page, "FUNCIONARIO");
   await expect(page.getByRole("heading", { name: "Mi carrera", level: 1 })).toBeVisible();
   // funcionario.demo está asociado a María Pérez (doc 14): 129 puntos, nivel 9, faltan 11
-  await expect(page.getByText("María Ignacia Pérez Soto")).toBeVisible();
+  await expect(page.getByText("María Ignacia Pérez Soto", { exact: true })).toBeVisible(); // las actas también llevan su nombre
   await expect(page.getByText("129 puntos").first()).toBeVisible();
   await expect(page.getByText("Bienio 6 · 01/03/2026")).toBeVisible();
   await page.getByText("Mis capacitaciones").click();

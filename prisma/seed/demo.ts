@@ -48,6 +48,9 @@ async function main(): Promise<void> {
     await actualizarInstitucion(ctx, institucion.id, INSTITUCION_DEMO);
     console.log(`Institución: ${INSTITUCION_DEMO.nombre}`);
   }
+  // Experiencias propias registradas con el nombre de arranque (versión anterior del seed): llevan el nombre real
+  const renombradas = await prisma.experiencia.updateMany({ where: { esPropia: true, institucion: { not: INSTITUCION_DEMO.nombre }, funcionario: { institucionId: institucion.id } }, data: { institucion: INSTITUCION_DEMO.nombre } });
+  if (renombradas.count > 0) console.log(`Experiencias propias renombradas: ${renombradas.count}`);
 
   // 2. Establecimientos reales de Lota (respuesta 6 del foro)
   const establecimientos = new Map<string, string>();
@@ -77,8 +80,8 @@ async function main(): Promise<void> {
     }
     const datos = { ...caso.funcionario, institucionId: institucion.id, establecimientoId: establecimientos.get(caso.establecimiento)! };
     const funcionario = caso.apertura
-      ? await crearFuncionarioConApertura(ctx, datos, caso.apertura, institucion.nombre)
-      : await crearFuncionario(ctx, datos, reglas, institucion.nombre);
+      ? await crearFuncionarioConApertura(ctx, datos, caso.apertura, INSTITUCION_DEMO.nombre)
+      : await crearFuncionario(ctx, datos, reglas, INSTITUCION_DEMO.nombre);
 
     for (const e of caso.experienciasExternas) {
       await registrarExperiencia(ctx, funcionario.id, { institucion: e.institucion, esPropia: false, fechaDesde: e.fechaDesde, fechaHasta: e.fechaHasta, reconocidaEl: e.reconocidaEl });
