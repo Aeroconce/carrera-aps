@@ -65,7 +65,11 @@ test("supervisión lee sin editar", async ({ page }) => {
   await page.goto("/funcionarios");
   await expect(page.getByRole("heading", { name: "Funcionarios", level: 1 })).toBeVisible();
   await expect(page.getByRole("link", { name: "Nuevo funcionario" })).toHaveCount(0);
-  // En desarrollo la ficha puede recompilarse al primer acceso: espera larga solo para la navegación
+  // En desarrollo la ficha se recompila tras editar código y puede tardar más de un minuto: se calienta antes
+  const maria = await prisma.funcionario.findFirstOrThrow({ where: { apellidos: { startsWith: "Pérez" } }, select: { id: true } });
+  await page.goto(`/funcionarios/${maria.id}`);
+  await expect(page.getByRole("heading", { name: "María Ignacia Pérez Soto" })).toBeVisible({ timeout: 120_000 });
+  await page.goto("/funcionarios");
   await page.getByRole("link", { name: "María Ignacia Pérez Soto" }).click();
   await page.waitForURL(/\/funcionarios\/[0-9a-f-]+$/, { timeout: 45_000 });
   await expect(page.getByRole("heading", { name: "María Ignacia Pérez Soto" })).toBeVisible({ timeout: 45_000 });

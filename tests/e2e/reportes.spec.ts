@@ -82,14 +82,17 @@ test.describe("reportes", () => {
     await page.goto("/reportes/carrera");
     await expect(page.getByRole("heading", { name: "2. Resumen de carrera funcionaria" })).toBeVisible();
     await expect(page.getByText(/^Situación al \d{2}\/\d{2}\/\d{4}$/)).toBeVisible();
-    // María Pérez (doc 14): 129 puntos hoy, nivel 9
-    const maria = page.getByRole("row").filter({ hasText: "Pérez Soto" });
-    await expect(maria).toContainText("129");
+    // Dotación completa (320 en la demo): paginada de a 100
+    await expect(page.locator("dd").filter({ hasText: /· \d+ funcionarios$/ })).toBeVisible();
+    await expect(page.getByRole("row").nth(1)).toBeVisible();
     await capturar(page, "carrera", proyecto);
     await sinViolacionesAxe(page);
 
-    // A la fecha de apertura: 105 puntos, nivel 10, con las reglas vigentes entonces
-    await page.goto("/reportes/carrera?alcance=dotacion&fecha=2024-12-31");
+    // María Pérez (doc 14): 129 puntos hoy, nivel 9; a la fecha de apertura 105 puntos, nivel 10
+    const maria = await prisma.funcionario.findFirstOrThrow({ where: { apellidos: { startsWith: "Pérez" } } });
+    await page.goto(`/reportes/carrera?alcance=funcionario&funcionario=${maria.id}`);
+    await expect(page.getByRole("row").filter({ hasText: "Pérez Soto" })).toContainText("129");
+    await page.goto(`/reportes/carrera?alcance=funcionario&funcionario=${maria.id}&fecha=2024-12-31`);
     await expect(page.getByText("Situación al 31/12/2024")).toBeVisible();
     await expect(page.getByRole("row").filter({ hasText: "Pérez Soto" })).toContainText("105");
   });

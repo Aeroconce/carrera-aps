@@ -2,7 +2,7 @@
 // El motor es puro y rápido: se calcula el estado de cada funcionario al vuelo, sin snapshots persistidos.
 
 import { prisma } from "@/lib/db/prisma";
-import { hoyEnChile, type FechaCivil } from "@/lib/fechas/civil";
+import { desdeDate, hoyEnChile, type FechaCivil } from "@/lib/fechas/civil";
 import { generarAlertas, type AlertaCalculada } from "@/lib/motor/alertas";
 import { calcularEstadoCarrera, type EstadoCarrera } from "@/lib/motor/estado";
 import type { Categoria, EstadoFuncionario, Prisma, TipoContrato } from "@/generated/prisma/client";
@@ -61,13 +61,19 @@ export async function listarFuncionarios(
       ...(rut ? [{ rut: { startsWith: rut } }] : []),
     ];
   }
-  const [reglas, funcionarios] = await Promise.all([
+  const [reglas, funcionarios, procesosAbiertos] = await Promise.all([
     cargarReglas(institucionId),
     prisma.funcionario.findMany({ where, include: INCLUIR_HISTORIAL, orderBy: [{ apellidos: "asc" }, { nombres: "asc" }] }),
+    prisma.procesoCalificacion.findMany({ where: { institucionId, estado: "ABIERTO" }, select: { periodoHasta: true, calificaciones: { select: { funcionarioId: true } } } }),
   ]);
+  // Proceso de calificación abierto sin calificación del funcionario (doc 04 §6: CALIFICACION_PENDIENTE)
+  const pendienteDe = (funcionarioId: string) => {
+    const proceso = procesosAbiertos.find((p) => !p.calificaciones.some((c) => c.funcionarioId === funcionarioId));
+    return proceso ? { fechaCierre: desdeDate(proceso.periodoHasta) } : null;
+  };
   const filas = funcionarios.map<FilaFuncionario>((funcionario) => {
     const estado = calcularEstadoCarrera(aEntradaMotor(funcionario), fechaCorte, reglas);
-    const alertas = ordenarAlertas(generarAlertas(estado, reglas));
+    const alertas = ordenarAlertas(generarAlertas(estado, reglas, { calificacionPendiente: pendienteDe(funcionario.id) }));
     return { funcionario, estado, alertas, proximaAlerta: alertas[0] ?? null };
   });
   return filtros.nivel ? filas.filter((f) => (f.estado.nivel.vigente ?? f.estado.nivel.calculado) === filtros.nivel) : filas;

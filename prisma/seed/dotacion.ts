@@ -279,10 +279,12 @@ export async function sembrarDotacion(ctx: ContextoAuditoria, institucionId: str
   }
 
   // Bienios posteriores a la apertura ya reconocidos por decreto en una parte de la dotación
+  const rutsGenerados = new Set(planes.map((p) => p.rut));
   const funcionarios = await prisma.funcionario.findMany({ where: { institucionId, estado: "ACTIVO" }, include: { apertura: true } });
   let reconocidos = 0;
   for (const f of funcionarios) {
-    if (!f.apertura?.fechaUltimoBienio || azar() > 0.6) continue;
+    // Solo la dotación generada: los casos del doc 14 (casos.ts) se conservan tal como están documentados
+    if (!rutsGenerados.has(f.rut) || !f.apertura?.fechaUltimoBienio || azar() > 0.6) continue;
     const ultimo = desdeDate(f.apertura.fechaUltimoBienio);
     const siguiente = sumarAnios(ultimo, 2);
     if (siguiente <= FECHA_SALDOS || siguiente > sumarDias(hoyEnChile(), -60)) continue;

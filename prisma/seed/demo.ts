@@ -23,6 +23,7 @@ import {
 import { cargarReglas } from "../../src/lib/carrera/reglas";
 import { REGLAS_DEMO } from "../../src/lib/reglas/demo";
 import { CASOS_DEMO, ESTABLECIMIENTOS_DEMO, INSTITUCION_DEMO } from "./casos";
+import { sembrarCalificaciones } from "./calificaciones";
 import { sembrarDocumentos } from "./documentos";
 import { sembrarDotacion } from "./dotacion";
 
@@ -100,6 +101,7 @@ async function main(): Promise<void> {
   // 4b. Dotación ficticia de 316 funcionarios por la carga inicial (doc 08), con los casos visibles
   await sembrarDotacion(ctx, institucion.id);
   await sembrarDocumentos(ctx, institucion.id);
+  await sembrarCalificaciones(ctx, institucion.id);
 
   // 5. Cuentas de demostración (doc 08, doc 11): SUPERVISION y FUNCIONARIO (asociado a María, caso 1).
   // Las contraseñas vienen de .env (scripts/generar-contrasenas-demo.ts); nunca se imprimen.
