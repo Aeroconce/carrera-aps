@@ -22,6 +22,9 @@ La demo corre en VPS2 (Hostinger, fuera de Chile), amparada en la respuesta 9 de
   bloque 443: `add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;` (`nginx -t`, reload).
   Actualizar: `git pull && deploy/desplegar-vps2.sh`. `web` escucha en 127.0.0.1:3060; `worker` sincroniza
   alertas a las 02:00 y respalda a las 03:00 (`scripts/worker.sh`).
+- Contraseñas de las cuentas de demostración: `scripts/generar-contrasenas-demo.ts` las genera en `.env` y
+  `scripts/aplicar-contrasenas-demo.ts` aplica los valores de `.env` a las cuentas ya creadas (en la demo:
+  `docker compose -p carrera-demo --profile demo run --rm web pnpm exec tsx scripts/aplicar-contrasenas-demo.ts`).
 - Al adjudicar, la producción se levanta en V2Networks (secciones siguientes) con base limpia y el reglamento
   real; la demo se apaga y sus datos ficticios se borran.
 
