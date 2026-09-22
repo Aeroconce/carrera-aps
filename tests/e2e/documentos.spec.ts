@@ -20,11 +20,18 @@ async function entrar(page: Page, email: string | undefined, password: string | 
   await expect(page).toHaveURL(destino, { timeout: 30_000 });
 }
 
+/** Capacitación usada por la prueba y el documento que tenía antes (se le quita para probar el vínculo). */
+let precondicion: { capacitacionId: string; documentoIdOriginal: string | null } | null = null;
+
 async function borrarCreados() {
   const docs = await prisma.documento.findMany({ where: { nombre: NOMBRE_E2E } });
   for (const d of docs) {
     await prisma.capacitacion.updateMany({ where: { documentoId: d.id }, data: { documentoId: null } });
     await prisma.documento.delete({ where: { id: d.id } });
+  }
+  if (precondicion) {
+    await prisma.capacitacion.update({ where: { id: precondicion.capacitacionId }, data: { documentoId: precondicion.documentoIdOriginal } });
+    precondicion = null;
   }
 }
 
@@ -40,8 +47,11 @@ test.afterAll(async () => {
 
 test("subir con vínculo, listar, descargar y proteger", async ({ page, browser }) => {
   await entrar(page, process.env.SEED_ADMIN_EMAIL, process.env.SEED_ADMIN_PASSWORD, /\/$/);
-  const carmen = await prisma.funcionario.findFirstOrThrow({ where: { apellidos: { startsWith: "Riquelme" } }, include: { capacitaciones: { where: { documentoId: null }, take: 1 } } });
-  const capacitacion = carmen.capacitaciones[0]!;
+  // Una capacitación de alguien que no sea María (la cuenta funcionario.demo); se le quita el respaldo para la prueba
+  const capacitacion = await prisma.capacitacion.findFirstOrThrow({ where: { funcionario: { estado: "ACTIVO", NOT: { apellidos: { startsWith: "Pérez" } } } }, include: { funcionario: true } });
+  precondicion = { capacitacionId: capacitacion.id, documentoIdOriginal: capacitacion.documentoId };
+  await prisma.capacitacion.update({ where: { id: capacitacion.id }, data: { documentoId: null } });
+  const carmen = capacitacion.funcionario;
   const carpeta = await mkdtemp(path.join(os.tmpdir(), "carrera-e2e-doc-"));
   const archivo = path.join(carpeta, NOMBRE_E2E);
   await writeFile(archivo, pdfMinimo("Certificado de prueba E2E"));
@@ -67,7 +77,7 @@ test("subir con vínculo, listar, descargar y proteger", async ({ page, browser 
   expect(descarga.status()).toBe(200);
   expect(descarga.headers()["content-type"]).toBe("application/pdf");
   expect((await descarga.body()).subarray(0, 4).toString("latin1")).toBe("%PDF");
-  await page.goto("/documentos?q=Riquelme");
+  await page.goto(`/documentos?q=${encodeURIComponent(carmen.apellidos.split(" ")[0]!)}`);
   await expect(page.getByRole("row").filter({ hasText: NOMBRE_E2E })).toContainText("Certificado de capacitación");
 
   // Un archivo que no es PDF/JPG/PNG se rechaza por su contenido

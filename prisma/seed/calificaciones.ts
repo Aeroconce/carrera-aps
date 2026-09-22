@@ -48,6 +48,15 @@ export async function sembrarCalificaciones(ctx: ContextoAuditoria, institucionI
     await cambiarEstadoProceso(ctx, proceso.id, "CERRADO");
     console.log(`Calificaciones: proceso ${anio} cerrado con ${calificados} calificados`);
   }
-  await crearProceso(ctx, institucionId, { nombre: "Calificación 2026", periodoDesde: "2026-01-01", periodoHasta: "2026-12-31" });
-  console.log(`Calificaciones: ${notas} anotaciones y proceso 2026 abierto`);
+  const abierto = await crearProceso(ctx, institucionId, { nombre: "Calificación 2026", periodoDesde: "2026-01-01", periodoHasta: "2026-12-31" });
+  let pendientes = 0;
+  for (const [i, f] of funcionarios.entries()) {
+    if (i % 15 === 0) {
+      pendientes++;
+      continue;
+    }
+    const puntaje = Math.round((4.2 + azar() * 2.8) * 10) / 10;
+    await calificar(ctx, { procesoId: abierto.id, funcionarioId: f.id, puntajeFinal: puntaje, lista: listaDe(reglas, "2026-12-31", f.categoria, puntaje), observaciones: null });
+  }
+  console.log(`Calificaciones: ${notas} anotaciones y proceso 2026 abierto con ${pendientes} pendientes`);
 }

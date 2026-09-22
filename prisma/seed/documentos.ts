@@ -15,8 +15,6 @@ export async function sembrarDocumentos(ctx: ContextoAuditoria, institucionId: s
     where: { documentoId: null, funcionario: { institucionId, estado: "ACTIVO" } },
     include: { funcionario: { select: { id: true, nombres: true, apellidos: true } } },
     orderBy: { fechaTermino: "desc" },
-    distinct: ["funcionarioId"],
-    take: 40,
   });
   let n = 0;
   for (const c of capacitaciones) {
@@ -35,7 +33,20 @@ export async function sembrarDocumentos(ctx: ContextoAuditoria, institucionId: s
     await vincularDocumento(ctx, "capacitacion", c.id, documento.id, c.funcionario.id);
     n++;
   }
+  const bienios = await prisma.bienio.findMany({
+    where: { documentoId: null, fechaReconocido: { not: null }, funcionario: { institucionId } },
+    include: { funcionario: { select: { id: true, nombres: true, apellidos: true } } },
+    orderBy: { fechaReconocido: "desc" },
+    take: 190,
+  });
+  let d = 0;
+  for (const b of bienios) {
+    const guardado = await guardarArchivo(institucionId, pdfMinimo(`Decreto ${b.decretoNumero ?? ""} de reconocimiento del bienio ${b.numero} - ${b.funcionario.nombres} ${b.funcionario.apellidos} (documento de demostracion)`));
+    const documento = await crearDocumento(ctx, { institucionId, funcionarioId: b.funcionario.id, tipo: "DECRETO", nombre: `Decreto ${b.decretoNumero ?? b.numero} bienio ${b.numero}.pdf`, ruta: guardado.ruta, mime: guardado.mime, tamano: guardado.tamano, hash: guardado.hash });
+    await vincularDocumento(ctx, "bienio", b.id, documento.id, b.funcionario.id);
+    d++;
+  }
   const reglamento = await guardarArchivo(institucionId, pdfMinimo("Reglamento comunal de carrera funcionaria (documento de demostracion)"));
   await crearDocumento(ctx, { institucionId, funcionarioId: null, tipo: "OTRO", nombre: "Reglamento comunal de carrera funcionaria (demo).pdf", ruta: reglamento.ruta, mime: reglamento.mime, tamano: reglamento.tamano, hash: reglamento.hash });
-  console.log(`Documentos: ${n} certificados vinculados y 1 institucional`);
+  console.log(`Documentos: ${n} certificados, ${d} decretos vinculados y 1 institucional`);
 }

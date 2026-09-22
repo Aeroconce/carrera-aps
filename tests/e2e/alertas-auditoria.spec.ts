@@ -98,17 +98,19 @@ test.describe("alertas y auditoría", () => {
   });
 
   test("descartar una alerta con motivo y que el panel de Reportes la omita", async () => {
-    await page.goto("/alertas?q=Lagos&tipo=DOCUMENTO_FALTANTE");
-    const fila = page.locator("tr, li").filter({ visible: true }).filter({ hasText: "Lagos Muñoz" }).first();
-    mensajeDescartado = (await fila.locator("td, p").filter({ hasText: "sin certificado adjunto" }).first().innerText()).trim();
-    expect(mensajeDescartado.length).toBeGreaterThan(10);
+    // Cualquier alerta activa de documento faltante de la demo (la dotación cambia con el seed)
+    const alerta = await prisma.alerta.findFirstOrThrow({ where: { tipo: "DOCUMENTO_FALTANTE", estado: "ACTIVA" }, include: { funcionario: true } });
+    mensajeDescartado = alerta.mensaje;
+    await page.goto(`/alertas?q=${encodeURIComponent(alerta.funcionario.apellidos.split(" ")[0]!)}&tipo=DOCUMENTO_FALTANTE`);
+    const fila = page.locator("tr, li").filter({ visible: true }).filter({ hasText: mensajeDescartado }).first();
+    await expect(fila).toBeVisible();
     await fila.getByRole("button", { name: "Descartar" }).click();
     const dialogo = page.getByRole("dialog", { name: "Descartar alerta" });
     await dialogo.getByLabel("Motivo").fill(NOTA_DESCARTAR);
     await dialogo.getByRole("button", { name: "Descartar", exact: true }).click();
     await expect(page.getByText("Alerta descartada")).toBeVisible();
 
-    await page.goto("/alertas?q=Lagos&estado=DESCARTADA");
+    await page.goto(`/alertas?q=${encodeURIComponent(alerta.funcionario.apellidos.split(" ")[0]!)}&estado=DESCARTADA`);
     await expect(page.locator("tr, li").filter({ visible: true }).filter({ hasText: NOTA_DESCARTAR }).first()).toBeVisible();
 
     await page.goto("/reportes/alertas?alcance=dotacion");

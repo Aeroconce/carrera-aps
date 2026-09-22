@@ -48,7 +48,7 @@ test("el funcionario ve su carrera y nada más", async ({ page }, testInfo) => {
   await expect(page.getByText("129 puntos").first()).toBeVisible();
   await expect(page.getByText("Bienio 6 · 01/03/2026")).toBeVisible();
   await page.getByText("Mis capacitaciones").click();
-  await expect(page.getByText("Diplomado en gestión de atención primaria")).toBeVisible();
+  await expect(page.getByText("Diplomado en gestión de atención primaria").first()).toBeVisible();
   if (capturas) await page.screenshot({ path: `capturas/portal-${testInfo.project.name}.png`, fullPage: true });
   await sinViolacionesAxe(page);
 

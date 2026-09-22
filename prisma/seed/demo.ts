@@ -5,6 +5,7 @@
 
 import "dotenv/config";
 import { auth } from "../../src/lib/auth/auth";
+import { sincronizarAlertas } from "../../src/lib/db/alertas";
 import { conAuditoria } from "../../src/lib/db/auditado";
 import { prisma } from "../../src/lib/db/prisma";
 import { crearRegla } from "../../src/lib/db/reglas";
@@ -128,6 +129,10 @@ async function main(): Promise<void> {
       console.log(`Cuenta ${cuenta.email}: actualizada`);
     }
   }
+
+  // 5b. Alertas al día con todo lo sembrado (documentos adjuntos y calificaciones pendientes)
+  const alertas = await sincronizarAlertas(ctx, institucion.id);
+  console.log(`Alertas: ${alertas.activas} activas tras la sincronización final`);
 
   // 6. Evidencia de respaldos (doc 08): 30 respaldos diarios de la base, el último verificado por restauración.
   if ((await prisma.respaldo.count()) === 0) {

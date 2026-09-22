@@ -4,6 +4,7 @@
 // registran con las operaciones auditadas de la aplicación los movimientos que hacen visibles los casos.
 // Ningún nombre real: nombres y RUT generados con dígito verificador válido.
 
+import { listarFuncionarios } from "../../src/lib/carrera/listado";
 import { cargarReglas } from "../../src/lib/carrera/reglas";
 import type { ContextoAuditoria } from "../../src/lib/db/auditado";
 import { sincronizarAlertas } from "../../src/lib/db/alertas";
@@ -284,7 +285,7 @@ export async function sembrarDotacion(ctx: ContextoAuditoria, institucionId: str
   let reconocidos = 0;
   for (const f of funcionarios) {
     // Solo la dotación generada: los casos del doc 14 (casos.ts) se conservan tal como están documentados
-    if (!rutsGenerados.has(f.rut) || !f.apertura?.fechaUltimoBienio || azar() > 0.6) continue;
+    if (!rutsGenerados.has(f.rut) || !f.apertura?.fechaUltimoBienio || azar() > 0.9) continue;
     const ultimo = desdeDate(f.apertura.fechaUltimoBienio);
     const siguiente = sumarAnios(ultimo, 2);
     if (siguiente <= FECHA_SALDOS || siguiente > sumarDias(hoyEnChile(), -60)) continue;
@@ -301,6 +302,31 @@ export async function sembrarDotacion(ctx: ContextoAuditoria, institucionId: str
     reconocidos++;
   }
   console.log(`Dotación: ${reconocidos} bienios posteriores a la apertura reconocidos por decreto`);
+
+  // Ascensos alcanzados después de la apertura: en la vida real el decreto sigue al puntaje; quedan pendientes
+  // solo los casos marcados y los del doc 14. Así el módulo Carrera y la alerta NIVEL_ALCANZADO muestran pocos.
+  const casosPendientes = new Set(planes.filter((p) => p.caso === "cumple ascenso").map((p) => p.rut));
+  const hoyCivil = hoyEnChile();
+  let ascensos = 0;
+  for (const fila of await listarFuncionarios(institucionId, {}, hoyCivil)) {
+    const f = fila.funcionario;
+    if (!rutsGenerados.has(f.rut) || casosPendientes.has(f.rut) || !fila.estado.nivel.cumpleAscenso) continue;
+    const ultimoBienio = fila.estado.bienios.bienios.filter((b) => !b.incluidoEnApertura).map((b) => b.fechaCumplido).sort().pop();
+    const vigenteDesde = fila.estado.nivel.vigenteDesde ?? FECHA_SALDOS;
+    let fechaDesde = ultimoBienio ? sumarDias(ultimoBienio, 15) : "2026-01-15";
+    if (fechaDesde <= vigenteDesde) fechaDesde = sumarDias(vigenteDesde, 30);
+    if (fechaDesde > hoyCivil) fechaDesde = hoyCivil;
+    await registrarCambioNivel(ctx, f.id, {
+      nivel: fila.estado.nivel.calculado,
+      fechaDesde,
+      puntajeAlCambio: fila.estado.puntaje.total.toString(),
+      motivo: "ASCENSO",
+      decretoNumero: `D-${700 + ascensos}/${fechaDesde.slice(0, 4)}`,
+      decretoFecha: fechaDesde,
+    });
+    ascensos++;
+  }
+  console.log(`Dotación: ${ascensos} ascensos registrados por decreto`);
 
   const alertas = await sincronizarAlertas(ctx, institucionId);
   console.log(`Alertas: ${alertas.nuevas} nuevas, ${alertas.activas} activas`);
