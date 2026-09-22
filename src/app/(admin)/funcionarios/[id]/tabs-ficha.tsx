@@ -15,7 +15,8 @@ export interface PestanaFicha {
 export function TabsFicha({ pestanas, inicial }: { pestanas: PestanaFicha[]; inicial: string }) {
   return (
     <Tabs defaultValue={inicial} className="gap-4">
-      <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+      {/* En celular la lista de pestañas se desplaza en horizontal: región enfocable (axe: scrollable-region-focusable) */}
+      <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0" role="region" aria-label="Pestañas" tabIndex={0}>
         <TabsList className="w-max">
           {pestanas.map((p) => (
             <TabsTrigger key={p.valor} value={p.valor}>
