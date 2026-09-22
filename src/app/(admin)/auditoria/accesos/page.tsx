@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { exigirSesion } from "@/lib/auth/sesion";
 import { prisma } from "@/lib/db/prisma";
@@ -12,6 +11,7 @@ import { formatearFechaHora } from "@/lib/formato";
 import { leerFecha } from "@/lib/reportes/filtros";
 import type { Prisma } from "@/generated/prisma/client";
 import { textosAuditoria } from "../textos";
+import { SelectorFecha } from "@/components/dominio/selector-fecha";
 
 const t = textosAuditoria.accesosPagina;
 export const metadata: Metadata = { title: t.titulo };
@@ -76,11 +76,11 @@ export default async function AccesosPage({ searchParams }: { searchParams: Prom
         </label>
         <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
           {t.filtros.desde}
-          <EntradaNativa type="date" name="desde" defaultValue={desde ?? ""} className="h-10 w-40" />
+          <SelectorFecha name="desde" defaultValue={desde ?? ""} className="w-44" />
         </label>
         <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
           {t.filtros.hasta}
-          <EntradaNativa type="date" name="hasta" defaultValue={hasta ?? ""} className="h-10 w-40" />
+          <SelectorFecha name="hasta" defaultValue={hasta ?? ""} className="w-44" />
         </label>
         <div className="flex gap-2">
           <button type="submit" className={buttonVariants({ variant: "outline", className: "h-10" })}>{t.filtros.aplicar}</button>

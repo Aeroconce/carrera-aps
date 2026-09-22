@@ -85,7 +85,7 @@ export default async function AuditoriaPage({ searchParams }: { searchParams: Pr
                         ""
                       )}
                     </TableCell>
-                    <TableCell className="max-w-sm text-xs text-tinta-secundaria">{e.detalle ?? ""}</TableCell>
+                    <TableCell className="min-w-64 max-w-sm whitespace-normal text-xs text-tinta-secundaria">{e.detalle ?? ""}</TableCell>
                     <TableCell>
                       <DetalleAuditoria
                         filas={filasDeCambio(e.antes, e.despues)}

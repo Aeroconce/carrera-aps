@@ -88,7 +88,7 @@ export async function SeccionCalificaciones({ funcionarioId, puedeEditar }: { fu
                         </ul>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-xs text-xs text-tinta-secundaria">{c.observaciones ?? ""}</TableCell>
+                    <TableCell className="min-w-48 max-w-xs whitespace-normal text-xs text-tinta-secundaria">{c.observaciones ?? ""}</TableCell>
                   </TableRow>
                 );
               })}

@@ -16,6 +16,7 @@ import type { ResultadoImportacion } from "@/lib/db/importacion";
 import { formatearChileno } from "@/lib/fechas/civil";
 import { formatearRut } from "@/lib/rut";
 import { textosImportar as t } from "./textos";
+import { SelectorFecha } from "@/components/dominio/selector-fecha";
 
 const CONTRATO: Record<string, string> = { TITULAR: "Titular", PLAZO_FIJO: "Plazo fijo", REEMPLAZO: "Reemplazo" };
 
@@ -81,7 +82,7 @@ export function AsistenteImportacion({ fechaSaldosInicial }: { fechaSaldosInicia
           </Field>
           <Field className="md:w-56">
             <FieldLabel htmlFor="fechaSaldos">{t.fechaSaldos}</FieldLabel>
-            <EntradaNativa id="fechaSaldos" name="fechaSaldos" type="date" defaultValue={fechaSaldosInicial} required className="h-10" />
+            <SelectorFecha id="fechaSaldos" name="fechaSaldos" defaultValue={fechaSaldosInicial} required />
             <FieldDescription>{t.fechaSaldosAyuda}</FieldDescription>
           </Field>
           <Button type="submit" disabled={pendiente} className="h-10">{pendiente && !validacion?.token ? t.validando : t.validar}</Button>

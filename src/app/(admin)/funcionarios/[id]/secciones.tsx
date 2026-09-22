@@ -442,7 +442,7 @@ export function SeccionHistorial({ entradas }: { entradas: Array<Auditoria & { u
               <TableCell>{e.usuario.name}</TableCell>
               <TableCell><Badge variant="outline">{ETIQUETAS_AUDITORIA.accion[e.accion] ?? e.accion}</Badge></TableCell>
               <TableCell>{ETIQUETAS_AUDITORIA.entidad[e.entidad] ?? e.entidad}</TableCell>
-              <TableCell className="max-w-md text-xs text-tinta-secundaria">
+              <TableCell className="min-w-72 max-w-md whitespace-normal text-xs text-tinta-secundaria">
                 <span className="block">{e.detalle ?? ""}</span>
                 <DetalleAuditoria
                   filas={filasDeCambio(e.antes, e.despues)}

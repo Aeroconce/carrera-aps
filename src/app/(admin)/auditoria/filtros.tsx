@@ -5,10 +5,10 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import type { FiltrosAuditoria } from "@/lib/auditoria/consulta";
 import { ACCIONES_AUDITORIA, ETIQUETAS_AUDITORIA } from "@/lib/auditoria/etiquetas";
 import { textosAuditoria } from "./textos";
+import { SelectorFecha } from "@/components/dominio/selector-fecha";
 
 const t = textosAuditoria.filtros;
 const claseSelect =
@@ -27,11 +27,11 @@ export function FiltrosAuditoriaForm({ filtros, usuarios, entidades, funcionario
     <form method="get" action="/auditoria" className="flex flex-col gap-2 rounded-lg border border-linea bg-superficie p-3 md:flex-row md:flex-wrap md:items-end">
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.desde}
-        <EntradaNativa type="date" name="desde" defaultValue={filtros.desde ?? ""} className="h-10 w-40" />
+        <SelectorFecha name="desde" defaultValue={filtros.desde ?? ""} className="w-44" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.hasta}
-        <EntradaNativa type="date" name="hasta" defaultValue={filtros.hasta ?? ""} className="h-10 w-40" />
+        <SelectorFecha name="hasta" defaultValue={filtros.hasta ?? ""} className="w-44" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.usuario}

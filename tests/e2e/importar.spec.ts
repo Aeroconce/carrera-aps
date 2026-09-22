@@ -108,7 +108,7 @@ test("plantilla, planilla con errores y carga válida", async ({ page }) => {
   const valida = path.join(carpeta, "valida.xlsx");
   await planilla(valida, [base(RUTS[0]!, "Ana", "Importada Uno"), base(RUTS[1]!, "Beatriz", "Importada Dos", { puntajeExperiencia: "", puntajeCapacitacion: "" }), base(RUTS[2]!, "Carla", "Importada Tres")]);
   await page.getByLabel("Planilla (.xlsx)").setInputFiles(valida);
-  await page.getByLabel("Fecha de los saldos").fill("2024-12-31");
+  await page.getByLabel("Fecha de los saldos").fill("31/12/2024");
   await page.getByRole("button", { name: "Validar planilla" }).click();
   await expect(page.getByText("Vista previa: 3 filas válidas")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("row").filter({ hasText: "Importada Dos" })).toContainText("sin desglose");

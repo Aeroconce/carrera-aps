@@ -139,7 +139,7 @@ export default async function CarreraPage({ searchParams }: { searchParams: Prom
                             <TableCell className="text-right">{formatearPuntos(p.puntajeTotal)}</TableCell>
                             <TableCell className="text-right font-medium">{formatearPuntos(p.puntajeFaltante)}</TableCell>
                             <TableCell className="whitespace-nowrap">{p.fechaEstimada ? `${formatearFecha(p.fechaEstimada)} (${formatearMesAnio(p.fechaEstimada)})` : t.proyecciones.noAlcanzable}</TableCell>
-                            <TableCell className="max-w-md text-xs text-tinta-secundaria">{p.descripcion}</TableCell>
+                            <TableCell className="min-w-72 max-w-md whitespace-normal text-xs text-tinta-secundaria">{p.descripcion}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

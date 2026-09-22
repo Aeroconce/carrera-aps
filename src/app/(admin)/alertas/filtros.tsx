@@ -5,10 +5,10 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import { TIPOS_ALERTA, type FiltrosAlertas } from "@/lib/alertas/tipos";
 import { ETIQUETAS } from "@/lib/reportes/etiquetas";
 import { textosAlertas } from "./textos";
+import { SelectorFecha } from "@/components/dominio/selector-fecha";
 
 const t = textosAlertas.filtros;
 const claseSelect =
@@ -51,11 +51,11 @@ export function FiltrosAlertasForm({ filtros, establecimientos }: { filtros: Fil
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.desde}
-        <EntradaNativa type="date" name="desde" defaultValue={filtros.desde ?? ""} className="h-10 w-40" />
+        <SelectorFecha name="desde" defaultValue={filtros.desde ?? ""} className="w-44" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.hasta}
-        <EntradaNativa type="date" name="hasta" defaultValue={filtros.hasta ?? ""} className="h-10 w-40" />
+        <SelectorFecha name="hasta" defaultValue={filtros.hasta ?? ""} className="w-44" />
       </label>
       <div className="flex gap-2">
         <Button type="submit" variant="outline" className="h-10">{t.aplicar}</Button>

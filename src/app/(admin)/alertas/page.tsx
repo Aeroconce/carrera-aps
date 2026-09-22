@@ -122,7 +122,7 @@ export default async function AlertasPage({ searchParams }: { searchParams: Prom
                       <Badge variant="secondary">{ETIQUETAS.tipoAlerta[a.tipo]}</Badge>
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{formatearFecha(a.fechaHito)}</TableCell>
-                    <TableCell className="max-w-md text-sm">{a.mensaje}</TableCell>
+                    <TableCell className="min-w-72 max-w-md whitespace-normal text-sm">{a.mensaje}</TableCell>
                     <TableCell>
                       <Badge className={COLOR_ESTADO[a.estado]} variant={a.estado === "DESCARTADA" ? "outline" : "default"}>
                         {t.estados[a.estado]}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { EntradaNativa } from "@/components/ui/entrada-nativa";
 import type { Alcance, FiltrosReporte } from "@/lib/reportes/filtros";
 import { textosReportes } from "../textos";
+import { SelectorFecha } from "@/components/dominio/selector-fecha";
 
 const t = textosReportes.filtros;
 const CATEGORIAS = ["A", "B", "C", "D", "E", "F"];
@@ -63,7 +64,7 @@ export function FiltrosReporteForm({ reporteId, filtros, establecimientos, funci
       )}
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.fecha}
-        <EntradaNativa type="date" name="fecha" defaultValue={filtros.fecha} required className="h-10 w-44" />
+        <SelectorFecha name="fecha" defaultValue={filtros.fecha} required className="w-44" />
       </label>
       <label className="flex flex-col gap-1 text-xs text-tinta-secundaria">
         {t.categoria}
