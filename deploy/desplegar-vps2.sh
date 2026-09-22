@@ -33,4 +33,4 @@ fi
 $DC up -d web worker
 $DC ps
 echo "Salud local:"
-curl -fsS -H "Host: ${DOMINIO:-demo-carrera.aeroconce.cl}" "http://127.0.0.1:${PUERTO_WEB:-3050}/api/health" && echo
+curl -fsS -H "Host: ${DOMINIO:-demo-carrera.aeroconce.cl}" "http://127.0.0.1:${PUERTO_WEB:-3060}/api/health" && echo
